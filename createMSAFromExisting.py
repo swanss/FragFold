@@ -6,7 +6,8 @@ def readFastaLines(file):
     return header,sequence
 
 def extractSubsequence(sequence,seqRange:tuple):
-    return sequence[seqRange[0]:seqRange[1]+1]
+    # Remember: residue number is 1-indexed, but the sequence is zero-indexed
+    return sequence[seqRange[0]-1:seqRange[1]]
 
 def hasGaps(sequence,gapchar:str='-'):
     # search for gaps within the sequence (between non-gap chars)
