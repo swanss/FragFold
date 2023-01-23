@@ -1,0 +1,80 @@
+{
+"folA":
+    {
+    "30aa_monomer_folA":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/folA/data/221127_colabfold/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/folA/data/221127_rosettarelax/",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/folA/data/221127_rosettainterfaceanalyzer/"
+        }
+    },
+"fstZ":
+    {
+    "30aa_monomer_fstZ":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/data/221111_colabfold",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/data/221112_rosettarelax_constraintostart",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/data/221112_rosettainterfaceanalyzer_constrainttostart"
+        }
+    },
+"groL":
+    {
+    "30aa_monomer_groL":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/groL/data/221128_colabfold"
+        },
+    "30aa_dimer_groL":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/groL/data/230111_colabfold_groLdimer"
+        },
+    "30aa_monomer_groS":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/groL/data/230115_colabfold_groL-groS"
+        }
+    },
+"gyrA":
+    {
+    "30aa_monomer_gyrA":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/gyrA/data/221203_colabfold/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/gyrA/data/221207_rosettarelax"
+        }
+    },
+"lptG":
+    {
+    "30aa_monomer_lptG":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/lptG/data/221202_colabfold/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/lptG/data/221207_rosettarelax/",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/lptG/data/221207_rosettainterfaceanalyzer/"
+        }
+    },
+"rplL":
+    {
+    "30aa_monomer_rplL":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL/data/221118_colabfold/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL/data/221118_rosettarelax/",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL/data/221207_rosettainterfaceanalyzer/"
+        }
+    },
+"ssb":
+    {
+    "30aa_monomer_ssb":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/221202_colabfold/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/221207_rosettarelax/",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/221207_rosettainterfaceanalyzer/"
+        },
+    "30aa_dimer_ssb":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/230105_colabfold_ssbdimer/",
+        "relax":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/230105_rosettarelax_ssbdimer/",
+        "intana":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/230105_rosettainterfaceanalyzer_ssbdimer/"
+        },
+    "30aa_tetramer_ssb":
+        {
+        "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ssb/data/230109_colabfold_ssbtetramer/"
+        }
+    }
+}
