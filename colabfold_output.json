@@ -20,7 +20,7 @@
 "groL":
     {
     "30aa_monomer_groL":
-        {
+        { 
         "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/groL/data/221128_colabfold"
         },
     "30aa_dimer_groL":

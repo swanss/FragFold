@@ -1,0 +1,17 @@
+protein-coding gene,protein-protein interaction inhibitory peak center (aa),30 aa fragment start (aa),30 aa fragment end (aa),protein-protein interaction partner gene(s),Interaction type,iPTM*contacts,Rosetta,notes
+gyrA,26.5,12,41,gyrB,heteromeric,maybe,,
+gyrA,385.5,371,400,gyrA,homomeric,Yes,,
+ftsZ,130.5,116,145,ftsZ,homomeric,?,,
+ftsZ,177.5,163,192,ftsZ,homomeric,Yes,,
+ftsZ,200.5,186,215,ftsZ,homomeric,Yes,,
+ftsZ,272.5,258,287,ftsZ,homomeric,Yes,,
+ftsZ,367.5,353,382,"ftsZ, ftsA, zipA, minC",both,?,,no structural data; intrinsically disordered tail region that interacts with multiple proteins
+rplL,19.5,5,34,"rplL, rplJ",both,?,,both a homomeric (with rplL) and heteromeric interaction (with rplJ) is formed by this same region of rplL
+ssb,66.5,52,81,ssb,homomeric,?,,
+groL,17.5,3,32,groL,homomeric,maybe,,maps to GroEL homomeric heptamer-heptamer interace
+groL,101.5,87,116,groL,homomeric,maybe,,maps to GroEL homomeric heptamer-heptamer interace
+groL,243.5,229,258,groS,heteromeric,No,,maps to GroEL ring interface with GroES ring 
+groL,260.5,246,275,groS,heteromeric,Yes,,maps to GroEL ring interface with GroES ring 
+groL,445.5,431,460,groL,homomeric,No,,maps to GroEL homomeric heptamer-heptamer interace
+groL,500.5,486,515,groL,homomeric,maybe,,maps to GroEL homomeric heptamer-heptamer interace
+lptG,323.5,309,338,lptF,heteromeric,maybe,,"as in Fig 2H inset, this (TM5) peak maps to a helix-helix interaction with LptF"
