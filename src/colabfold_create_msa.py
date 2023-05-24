@@ -1,3 +1,7 @@
+import math
+import random
+import numpy as np
+
 def readFastaLines(file):
     header = file.readline().rstrip()
     if header != '' and not header.startswith('>'):
@@ -26,7 +30,25 @@ def countLower(sequence):
             count+=1
     return count
 
-def createMSA(inputMSA: str, protein_range: tuple, fragment_range: tuple, subsample: int, a3m_output_path: str, protein_copies: int = 1):
+def calcHammingDistance(s1,s2):
+    assert len(s1) == len(s2)
+    return np.sum([a!=b for a,b in zip(s1,s2)])
+
+def shuffleSeq(seq,maxPercentIdentity=0.3):
+    assert len(seq) > 1
+    minHammingDistance = math.floor((1-maxPercentIdentity)*len(seq))
+    hammingDistance = None
+    shuffled_seq = None
+    while hammingDistance is None or hammingDistance < minHammingDistance:
+        seq_list = list(seq)
+        random.shuffle(seq_list)
+        shuffled_seq = ''.join(seq_list)
+        hammingDistance = calcHammingDistance(shuffled_seq,seq)
+        # print(shuffled_seq,hammingDistance)
+    return shuffled_seq
+
+def createMSA(inputMSA: str, protein_range: tuple, fragment_range: tuple, subsample: int, a3m_output_path: str,
+              protein_copies: int = 1, fragment_single_sequence=False, fragment_shuffle=False):
     full_query_seq = ''
     new_info_line = ''
 
@@ -40,6 +62,8 @@ def createMSA(inputMSA: str, protein_range: tuple, fragment_range: tuple, subsam
         header,whole_sequence = readFastaLines(input_file)
         query_protein_sequence = extractSubsequence(whole_sequence,protein_range)
         query_fragment_sequence = extractSubsequence(whole_sequence,fragment_range)
+        if fragment_shuffle:
+            query_fragment_sequence = shuffleSeq(query_fragment_sequence)
         full_query_seq = query_protein_sequence + query_fragment_sequence
         new_info_line = f"#{len(query_protein_sequence)},{len(query_fragment_sequence)}\t{protein_copies},1"+'\n'
         
@@ -64,7 +88,7 @@ def createMSA(inputMSA: str, protein_range: tuple, fragment_range: tuple, subsam
                 new_protein_sequence = new_protein_sequence + '-'*countLower(protein_sequence) + '\n'
                 output_file.write(new_header)
                 output_file.write(new_protein_sequence)
-            if fragment_sequence.replace('-','') != '' and not hasGaps(fragment_sequence):
+            if fragment_sequence.replace('-','') != '' and not hasGaps(fragment_sequence) and not (fragment_single_sequence or fragment_shuffle):
                 new_header = header + '\t102\n'
                 new_fragment_sequence = fragment_sequence.rjust(len(full_query_seq),'-')
                 new_fragment_sequence = new_fragment_sequence + '-'*countLower(fragment_sequence) + '\n'
@@ -72,7 +96,8 @@ def createMSA(inputMSA: str, protein_range: tuple, fragment_range: tuple, subsam
                 output_file.write(new_fragment_sequence)
             count+=1
 
-def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tuple, fragmentProteinMSA: str, fragment_range: tuple, subsample: int, a3m_output_path: str, protein_copies: int = 1):
+def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tuple, fragmentProteinMSA: str, fragment_range: tuple, subsample: int, a3m_output_path: str, protein_copies: int = 1,
+                                  fragmentSingleSequence=False, fragmentShuffle=False):
     full_query_seq = ''
     new_info_line = ''
 
@@ -87,10 +112,11 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
         # First line in the full-length msa is whole protein sequence
         fulllength_header,whole_sequence = readFastaLines(fulllength_input_file)
         query_protein_sequence = extractSubsequence(whole_sequence,protein_range)
-
         # First line in fragment msa is the whole sequence of the protein that was broken into fragments
         fragment_header,whole_fragmented_sequence = readFastaLines(fragment_input_file)
         query_fragment_sequence = extractSubsequence(whole_fragmented_sequence,fragment_range)
+        if fragmentShuffle:
+            query_fragment_sequence = shuffleSeq(query_fragment_sequence)
         full_query_seq = query_protein_sequence + query_fragment_sequence
         new_info_line = f"#{len(query_protein_sequence)},{len(query_fragment_sequence)}\t{protein_copies},1"+'\n'
         
@@ -116,7 +142,7 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
             count+=1
         # Next get fragment MSA entries
         count = 1
-        while fragment_header != '':
+        while fragment_header != '' and not (fragmentSingleSequence or fragmentShuffle):
             fragment_header,sequence = readFastaLines(fragment_input_file)
             if subsample > 0 and count == subsample:
                 break
@@ -125,6 +151,8 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
             if fragment_sequence.replace('-','') != '' and not hasGaps(fragment_sequence):
                 new_header = fragment_header + '\t102\n'
                 new_fragment_sequence = fragment_sequence.rjust(len(full_query_seq),'-')
+                if fragmentShuffle:
+                    new_fragment_sequence = shuffleSeq(new_fragment_sequence)
                 new_fragment_sequence = new_fragment_sequence + '-'*countLower(fragment_sequence) + '\n'
                 output_file.write(new_header)
                 output_file.write(new_fragment_sequence)

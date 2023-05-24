@@ -8,9 +8,10 @@ import matplotlib.pyplot as plt
 
 from Bio.PDB import *
 
-sys.path.insert(0,'/home/gridsan/sswanson/local_code_mirror/inhibitory_fragments_structure_prediction')
+sys.path.insert(0,'/data1/groups/keatinglab/swans/savinovCollaboration/inhibitory_fragments_structure_prediction')
 from src.colabfold_process_output_utils import *
 from src.colabfold_process_output import *
+from src.analyze_predictions import *
 
 def get_confidence_dataframe(colab_path):
     iptm_list = []
@@ -21,7 +22,15 @@ def get_confidence_dataframe(colab_path):
     fragment_end = []
 
     all_paths = glob.glob(os.path.join(colab_path,"data/*/output/*_unrelaxed_rank_1_*.json"))
+    if len(all_paths) == 0:
+        all_paths = glob.glob(os.path.join(colab_path,"data/*/output/*scores_rank_001_*.json"))
+    if len(all_paths) == 0:
+        raise ValueError("Did not find .json files")
     for path in all_paths:
+        name = path.split('/')[-3]
+        (start,end) = name.split('_')[-1].split('-')
+        fragment_len = int(end) - int(start) + 1
+
         # Use the .a3m info line to determine the number of chains/residue lengths
         a3m_path_list = glob.glob(os.path.join(os.path.dirname(path),'*.a3m'))
         assert len(a3m_path_list) == 1, (print(a3m_path_list))
@@ -40,28 +49,26 @@ def get_confidence_dataframe(colab_path):
         with open(path,'r') as file:
             data = json.load(file)
 
-        plddt = float(np.mean(np.array(data['plddt'][-30:])))
+        plddt = float(np.mean(np.array(data['plddt'][-fragment_len:])))
         plddt_list.append(plddt)
             
         iptm = float(predicted_tm_score(np.array(data['pae']),asym_id,True))
         iptm_list.append(iptm)
         
-        name = path.split('/')[-3]
         fragment_name.append(name)
-        (start,end) = name.split('_')[-1].split('-')
         fragment_start.append(int(start))
         fragment_end.append(int(end))
         fragment_center.append((fragment_start[-1]+fragment_end[-1])/2)
 
     confidence_df = pd.DataFrame({
         'fragment_name':fragment_name,
-        'start':fragment_start,
-        'aa.fragmentCenter':fragment_center,
-        'end':fragment_end,
+        'fragment start (aa)':fragment_start,
+        'fragment center (aa)':fragment_center,
+        'fragment end (aa)':fragment_end,
         'iptm':iptm_list,
         'plddt':plddt_list
     })
-    confidence_df = confidence_df.sort_values(by='start')
+    confidence_df = confidence_df.sort_values(by='fragment start (aa)')
     return confidence_df
 
 def get_contact_dataframe(colab_path):
@@ -74,6 +81,10 @@ def get_contact_dataframe(colab_path):
     parser = PDBParser()
 
     all_paths = glob.glob(os.path.join(colab_path,'data/*/output/*_unrelaxed_rank_1_*.pdb'))
+    if (len(all_paths)==0):
+        all_paths = glob.glob(os.path.join(colab_path,'data/*/output/*_unrelaxed_rank_001_*.pdb'))
+    if len(all_paths)==0:
+        raise ValueError("Did not find .pdb files")
 
     # Use the .a3m info line to determine the number of chains/residue lengths (will be the same for each individual structure)
     a3m_path_list = glob.glob(os.path.join(os.path.dirname(all_paths[0]),'*.a3m'))
@@ -97,24 +108,26 @@ def get_contact_dataframe(colab_path):
 
     conts_df = pd.DataFrame({
         'fragment_name':fragment_name,
-        'start':fragment_start,
-        'aa.fragmentCenter':fragment_center,
-        'end':fragment_end,
+        'fragment start (aa)':fragment_start,
+        'fragment center (aa)':fragment_center,
+        'fragment end (aa)':fragment_end,
         'n_contacts':n_contacts,
         'path':all_paths
     })
-    conts_df = conts_df.sort_values(by='start')
+    conts_df = conts_df.sort_values(by='fragment start (aa)')
     return conts_df
 
 def main(args):
+    print('Loading JSON file specifying where colabfold results are located')
     # Load JSON file specifying where to import colabfold results from
     json_path = args.import_json
     with open(json_path,"r") as file:
         colab_results = json.loads(file.read())
 
     # For each gene and condition, import available data and create individual dataframes
+    print('Processing results...')
     df_list = []
-    merge_on_list = ['fragment_name','start','end','aa.fragmentCenter']
+    merge_on_list = ['fragment_name','fragment start (aa)','fragment center (aa)','fragment end (aa)']
     for gene_name in colab_results:
         print('gene_name:',gene_name)
         for condition in colab_results[gene_name]:
@@ -133,6 +146,11 @@ def main(args):
 
             # Calculate the weighted contacts
             comb_df['weighted_contacts'] = comb_df['n_contacts'] * comb_df['iptm']
+
+            comb_df['gene'] = gene_name
+            comb_df['condition'] = condition
+
+            print(f"Combined dataframe with {len(comb_df)} rows")
 
             df_list.append(comb_df)
 

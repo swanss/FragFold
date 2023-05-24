@@ -7,6 +7,8 @@ import matplotlib.pyplot as plt
 
 from Bio.PDB import *
 
+# The following functions are specific to processing colabfold output
+
 def getChainInfoFromA3M(a3m_path):
     with open(a3m_path,'r') as file:
         chain_info_line = file.readline().rstrip()[1:] #strip trailing \n and preceding #
@@ -62,108 +64,3 @@ def predicted_tm_score(
     per_alignment = np.sum(predicted_tm * normed_residue_mask, axis=-1)
     return np.asarray(per_alignment[(per_alignment * residue_weights).argmax()])
 
-## Heavy-atom contacts
-
-def isContact(chain_group_a,chain_group_b,res_1,res_2):
-    if res_1.get_parent().id in chain_group_a and res_2.get_parent().id in chain_group_b:
-            return True
-    if res_1.get_parent().id in chain_group_b and res_2.get_parent().id in chain_group_a:
-            return True
-    return False
-
-def countInterfaceContacts(structure_path, chain_group_a=set('A'), chain_group_b=set('B'), contact_distance = 4):
-    parser = PDBParser()
-    s = parser.get_structure("s", structure_path)
-    ns = NeighborSearch([x for x in s.get_atoms()])
-    nearby_res = ns.search_all(contact_distance,'R')
-#     print(len(nearby_res),nearby_res[0:5])
-    interface_contacts = [isContact(chain_group_a,chain_group_b,x,y) for x,y in nearby_res]
-    return np.array(interface_contacts).sum()
-
-## RMSD to native (or other) structures (after alignment by target)
-
-def fixResidueNumbers(chain,start_res_num):
-    # add an offset to residue numbers
-    res_list = [res for res in chain.get_residues()]
-    current_start_res_num = res_list[0].id[1]
-    offset = start_res_num - current_start_res_num
-    if offset == 0:
-        return
-    
-    # set the direction of iteration depending on whether residue numbers will be 
-    # shifted up or down
-    if offset > 0:
-        res_list.reverse()
-    for res in res_list:
-        res_info = list(res.id)
-        res_info[1] = res_info[1] + offset
-        res.id = tuple(res_info)
-
-def alignStructureByChains(fixed,fixed_chain,mobile,mobile_chain,sup=None):
-    if sup == None:
-        sup = Superimposer()
-    # find the optimal superposition between the selected chains
-    #some of the residues may be missing, so walk through the structures manually
-    numRes = len([x for x in fixed[0][fixed_chain].get_residues()])
-    fixed_atoms,mobile_atoms = getAtomsInRange(fixed,fixed_chain,mobile,mobile_chain,11,numRes)
-    
-    sup.set_atoms(fixed_atoms,mobile_atoms)
-    print('Aligned chains with RMSD:',sup.rms)
-    
-    # apply to the whole mobile structure
-    sup.apply([a for a in mobile.get_atoms()])
-    return sup.rms
-        
-def getAtomsInRange(s1,s1_chain_id,s2,s2_chain_id,start_res_num,n_res):
-    s1_resmap = createResidueMap(s1[0][s1_chain_id])
-    s2_resmap = createResidueMap(s2[0][s2_chain_id])
-    # try to get the backbone atoms for all residues in the range, but if
-    # either s1 or s2 doesn't have a residue, we skip it
-    s1_atoms = []
-    s2_atoms = []
-    for res_num in range(start_res_num,start_res_num+n_res):
-        r1 = s1_resmap[res_num] if res_num in s1_resmap else None
-        r2 = s2_resmap[res_num] if res_num in s2_resmap else None
-        if r1 == None or r2 == None:
-#             print(f"Residues are missing at residue number {res_num}. R1: {r1}. R2: {r2}")
-            continue
-        r1_bb_atoms = getBBAtoms(r1)
-        r2_bb_atoms = getBBAtoms(r2)
-        s1_atoms.extend(r1_bb_atoms)
-        s2_atoms.extend(r2_bb_atoms)
-    return s1_atoms,s2_atoms
-
-def createResidueMap(chain):
-    resNum_to_res = dict()
-    for res in chain.get_residues():
-        res_number = res.id[1]
-        assert res_number not in resNum_to_res
-        resNum_to_res[res_number] = res
-    return resNum_to_res
-
-def getBBAtoms(residue):
-    bb_atoms = []
-    all_atoms = {a.name:a for a in residue.get_atoms()}
-    for atom_name in ['N','CA','C','O']:
-        if atom_name in all_atoms:
-            bb_atoms.append(all_atoms[atom_name])
-        else:
-            raise ValueError(f"Backbone atom {atom_name} not found in {residue}")
-    return bb_atoms
-
-def calcRMSD(atoms1,atoms2):
-    atoms1 = np.array(atoms1)
-    atoms2 = np.array(atoms2)
-    return np.sqrt(np.mean(np.square(atoms1-atoms2)))
-
-## Interface RMSD
-
-def getInterfaceContacts(res_list_1,res_list_2):
-    res_list_1.extend(res_list_2)
-    atom_list = [atom 
-                 for res in res_list_1
-                 for atom in res.get_atoms()]
-    ns = NeighborSearch(atom_list)
-    nearby_res = ns.search_all(contact_distance,'R')
-    interface_contacts = [(x,y) for x,y in nearby_res if x.get_parent()!=y.get_parent()]
-    return interface_contacts
