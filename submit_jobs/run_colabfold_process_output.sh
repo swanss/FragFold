@@ -14,7 +14,7 @@ REPO=/data1/groups/keatinglab/swans/savinovCollaboration/inhibitory_fragments_st
 
 SECONDS=0
 
-python $REPO/src/colabfold_process_output.py --import_json $REPO/colabfold_output.json
+python $REPO/scripts/colabfold_process_output.py --import_json $REPO/json/colabfold_output.json --load_all
 
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 echo $ELAPSED

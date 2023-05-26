@@ -129,11 +129,17 @@ def countInterfaceContacts(s, contact_distance = 4):
     interface_contacts = [x.get_parent()!=y.get_parent() for x,y in nearby_res]
     return np.array(interface_contacts).sum()
 
-def rescaleSeriesAtoB(df_series_a,df_series_b):
+def rescaleSeriesAtoB(df_series_a,df_series_b,a_min=None,b_min=None):
     max_val_a = df_series_a.max()
-    min_val_a = df_series_a.min()
-    max_val_b = 0 #df_series_b.max()
-    min_val_b = df_series_b.min()
+    if a_min is not None:
+        min_val_a = a_min
+    else:
+        min_val_a = df_series_a.min()
+    max_val_b = df_series_b.max()
+    if b_min is not None:
+        min_val_b = b_min
+    else:
+        min_val_b = df_series_b.min()
     print(max_val_a,min_val_a)
     print(max_val_b,min_val_b)
     return ((max_val_b-min_val_b)*((df_series_a - min_val_a)/(max_val_a-min_val_a)))+min_val_b
