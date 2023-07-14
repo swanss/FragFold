@@ -1,0 +1,19 @@
+2023-02-27 08:19:29,428 Running colabfold 1.3.0 (7484a8bbc6d88076e815022333db1621d9f93bc0)
+2023-02-27 08:19:29,685 Unable to initialize backend 'tpu_driver': NOT_FOUND: Unable to find driver in registry given worker: 
+2023-02-27 08:19:29,874 Unable to initialize backend 'rocm': NOT_FOUND: Could not find registered platform with name: "rocm". Available platform names are: Interpreter Host CUDA
+2023-02-27 08:19:29,875 Unable to initialize backend 'tpu': module 'jaxlib.xla_extension' has no attribute 'get_tpu_client'
+2023-02-27 08:19:29,875 Unable to initialize backend 'plugin': xla_extension has no attributes named get_plugin_device_client. Compile TensorFlow with //tensorflow/compiler/xla/python:enable_plugin_device set to true (defaults to false) to enable this.
+2023-02-27 08:19:31,633 Found 5 citations for tools or databases
+2023-02-27 08:19:34,573 Query 1/1: bsubtilis_ftsZ1copies_10-315_bsubtilis_ftsZ_353-382 (length 336)
+2023-02-27 08:19:44,744 Running model_3
+2023-02-27 08:23:50,929 model_3 took 242.1s (3 recycles) with pLDDT 90 and ptmscore 0.851
+2023-02-27 08:24:00,001 Running model_4
+2023-02-27 08:26:12,491 model_4 took 129.5s (3 recycles) with pLDDT 88.7 and ptmscore 0.849
+2023-02-27 08:26:20,807 Running model_5
+2023-02-27 08:28:33,661 model_5 took 130.1s (3 recycles) with pLDDT 89.4 and ptmscore 0.856
+2023-02-27 08:28:41,730 Running model_1
+2023-02-27 08:30:54,486 model_1 took 130.1s (3 recycles) with pLDDT 87 and ptmscore 0.839
+2023-02-27 08:31:02,331 Running model_2
+2023-02-27 08:33:15,129 model_2 took 130.1s (3 recycles) with pLDDT 87.5 and ptmscore 0.845
+2023-02-27 08:33:22,941 reranking models by ptmscore
+2023-02-27 08:33:27,473 Done

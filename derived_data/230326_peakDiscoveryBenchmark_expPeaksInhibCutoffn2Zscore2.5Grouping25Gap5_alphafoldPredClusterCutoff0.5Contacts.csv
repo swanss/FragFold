@@ -1,0 +1,17 @@
+,gene,fragment center (aa),covering,peak type
+12,ftsZ-coding-EcoliBL21DE3,174.5,['FtsZ_10-316_FtsZ_166-195'],known
+13,ftsZ-coding-EcoliBL21DE3,190.5,['FtsZ_10-316_FtsZ_187-216'],known
+14,ftsZ-coding-EcoliBL21DE3,213.5,['FtsZ_10-316_FtsZ_187-216'],novel
+15,ftsZ-coding-EcoliBL21DE3,272.5,['FtsZ_10-316_FtsZ_266-295'],known
+16,ftsZ-coding-EcoliBL21DE3,367.5,['FtsZ_10-316_FtsZ_352-381'],known
+17,groL-coding-EcoliBL21DE3,17.5,['groEL_1-548_groEL_1-30'],known
+21,groL-coding-EcoliBL21DE3,243.5,"['groES1copies_1-97_groEL_238-267', 'groES1copies_1-97_groEL_250-279']",known
+26,gyrA-coding-EcoliBL21DE3,26.5,['gyrB1copies_1-804_gyrA_2-31'],known
+27,gyrA-coding-EcoliBL21DE3,89.5,"['gyrA_1-872_gyrA_62-91', 'gyrB1copies_1-804_gyrA_79-108', 'gyrB1copies_1-804_gyrA_82-111']",novel
+28,gyrA-coding-EcoliBL21DE3,137.5,"['gyrB1copies_1-804_gyrA_119-148', 'gyrB1copies_1-804_gyrA_121-150', 'gyrB1copies_1-804_gyrA_123-152']",novel
+34,gyrA-coding-EcoliBL21DE3,382.5,"['gyrA_1-872_gyrA_379-408', 'gyrB1copies_1-804_gyrA_366-395', 'gyrB1copies_1-804_gyrA_367-396', 'gyrB1copies_1-804_gyrA_368-397']",known
+35,gyrA-coding-EcoliBL21DE3,489.5,"['gyrA_1-872_gyrA_441-470', 'gyrB1copies_1-804_gyrA_454-483', 'gyrB1copies_1-804_gyrA_456-485']",novel
+65,lptG-coding-EcoliBL21DE3,76.5,['lptF1copies_1-366_lptG_69-82'],novel
+67,lptG-coding-EcoliBL21DE3,323.5,['lptF1copies_1-366_lptG_313-326'],known
+68,rplL-coding-EcoliBL21DE3,19.5,"['rpIL_1-121_rpIL_1-30', 'rpIL_1-121_rpIL_4-33']",known
+97,ssb-coding-EcoliBL21DE3,66.5,"['ssb4copies_1-178_ssb_44-73', 'ssb4copies_1-178_ssb_45-74', 'ssb4copies_1-178_ssb_46-75', 'ssb4copies_1-178_ssb_48-77', 'ssb4copies_1-178_ssb_50-79']",known

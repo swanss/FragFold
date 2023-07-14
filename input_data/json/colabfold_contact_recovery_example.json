@@ -1,0 +1,14 @@
+[
+    {
+        "native_structure":"6unx_ftsZ_ABC.pdb",
+        "native_protein_chains":"A",
+        "native_fragment_chain":"B",
+        "fragment_res_start":186,
+        "fragment_res_length":30,
+        "colabfold_gene":"ftsZ-coding-EcoliBL21DE3",
+        "colabfold_condition":"30aa_monomer_ftsZ",
+        "colabfold_protein_chains":"A",
+        "colabfold_protein_chain_start":10,
+        "colabfold_fragment_chain":"B"
+    }
+]

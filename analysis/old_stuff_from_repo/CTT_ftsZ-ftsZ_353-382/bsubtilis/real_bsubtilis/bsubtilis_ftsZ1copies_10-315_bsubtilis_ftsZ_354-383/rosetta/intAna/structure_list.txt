@@ -1,0 +1,1 @@
+/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/analysis/bsub_ftsZ/rosetta_cterm_peptide/relax/bsubtilis_ftsZ1copies_10-315_bsubtilis_ftsZ_354-383_unrelaxed_rank_4_model_1_0001.pdb
