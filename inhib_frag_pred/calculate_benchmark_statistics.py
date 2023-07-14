@@ -27,7 +27,7 @@ def main(args):
     # path = '/data1/groups/keatinglab/swans/savinovCollaboration/analysis/230223_expPeakFinding_5/230223_experimentalpeaks_Zscorecutoff2.5_modeabsolute_grouping25_maxgapdistance5.csv'
     path = args.exp_peaks_csv
     exp_df = pd.read_csv(path,index_col=0)
-    exp_df['gene'] = exp_df['gene'].str.replace('rpIL-coding-EcoliBL21DE3','rplL-coding-EcoliBL21DE3') # fix misnamed gene
+    # exp_df['gene'] = exp_df['gene'].str.replace('rpIL-coding-EcoliBL21DE3','rplL-coding-EcoliBL21DE3') # fix misnamed gene
     print(f"There are {len(exp_df)} peaks in the experimental data")
 
     # path = '/data1/groups/keatinglab/swans/savinovCollaboration/inhibitory_fragments_structure_prediction/data/PPI_inhibitory_fragment_peaks_AS_230114.csv'
