@@ -471,7 +471,7 @@ def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
         'exp cluster first':exp_start_list,
         'exp cluster last' :exp_end_list,
         'E = inhibitory effect (enrichment)':exp_inhibeffect_list,
-        'exp peak type':exp_type_list,
+        'peak type':exp_type_list,
         'pred cluster id':pred_cluster_id_list,
         'pred cluster first':pred_start_list,
         'pred cluster last':pred_end_list,
@@ -484,22 +484,23 @@ def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     })
     return overlap_df
 
-def calculateBenchmarkStatistics(overlap_df,maxFragmentLength):
+def calculateBenchmarkStatistics(overlap_df,maxFragmentLength,nExpPeaks,nExpKnownPeaks):
     minClusterSize_list = []
     resOverlapReq_list = []
     resOverlapFrac_list = []
 
-    ntotalexppeaks_list = []
     ntotalpredpeaks_list = []
     noverlapexppeaks_list = []
     noverlappredpeaks_list = []
+
+    noverlapexppeaks_known_list = []
+    noverlappredpeaks_known_list = []
 
     for minClusterSize in range(1,15):
         for resOverlapReq in range(15,maxFragmentLength+1):
             resOverlapFrac = resOverlapReq/maxFragmentLength
             filt_overlap_df = overlap_df[(overlap_df['pred cluster n fragments']>=minClusterSize)&
                                         (overlap_df['overlap fraction req']==resOverlapFrac)]
-            ntotalexppeaks = filt_overlap_df.groupby('exp cluster id').ngroups
             ntotalpredpeaks = filt_overlap_df.groupby('pred cluster id').ngroups
             noverlapexppeaks = filt_overlap_df[filt_overlap_df['overlap']==True].groupby('exp cluster id').ngroups
             noverlappredpeaks = filt_overlap_df[filt_overlap_df['overlap']==True].groupby('pred cluster id').ngroups
@@ -508,20 +509,31 @@ def calculateBenchmarkStatistics(overlap_df,maxFragmentLength):
             resOverlapReq_list.append(resOverlapReq)
             resOverlapFrac_list.append(resOverlapFrac)
             
-            ntotalexppeaks_list.append(ntotalexppeaks)
             ntotalpredpeaks_list.append(ntotalpredpeaks)
             noverlapexppeaks_list.append(noverlapexppeaks)
             noverlappredpeaks_list.append(noverlappredpeaks)
+
+            # Filter for "known" peaks and repeat the calculations
+            filt_overlap_known_df = filt_overlap_df[filt_overlap_df['peak type']=='known']
+            noverlapexpknownpeaks = filt_overlap_known_df[filt_overlap_known_df['overlap']==True].groupby('exp cluster id').ngroups
+            noverlappredknownpeaks = filt_overlap_known_df[filt_overlap_known_df['overlap']==True].groupby('pred cluster id').ngroups
+
+            noverlapexppeaks_known_list.append(noverlapexpknownpeaks)
+            noverlappredpeaks_known_list.append(noverlappredknownpeaks)
             
     stat_df = pd.DataFrame({'min cluster size':minClusterSize_list,
                             'overlap frac req':resOverlapFrac_list,
                             'overlap req':resOverlapReq_list,
-                            '# exp peaks':ntotalexppeaks_list,
+                            '# exp peaks':nExpPeaks,
                             '# pred peaks':ntotalpredpeaks_list,
                             '# overlap exp peaks':noverlapexppeaks_list,
-                            '# overlap pred peaks':noverlappredpeaks_list
+                            '# overlap pred peaks':noverlappredpeaks_list,
+                            '# known exp peaks':nExpKnownPeaks,
+                            '# overlap known exp peaks':noverlapexppeaks_known_list,
+                            '# overlap known pred peaks':noverlappredpeaks_known_list
                         })
     stat_df['% inhibitory peaks predicted'] = 100 * stat_df['# overlap exp peaks'] / stat_df['# exp peaks']
+    stat_df['% known inhibitory peaks predicted'] = 100 * stat_df['# overlap known exp peaks'] / stat_df['# known exp peaks']
     stat_df['% predicted peaks inhibitory'] = 100 * stat_df['# overlap pred peaks'] / stat_df['# pred peaks']
     return stat_df
 

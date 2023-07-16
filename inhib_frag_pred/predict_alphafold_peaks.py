@@ -177,7 +177,7 @@ def paramScan(args):
     npeaks_df = pd.DataFrame({'n_contacts_cutoff':ncontsl,
                               'n_weighted_contacts_cutoff':nweightl,
                               'iptm_cutoff':iptml,
-                              'contactdistl':contactdistl,
+                              'contactdist':contactdistl,
                               'n_peaks':n_peak_list})
     npeaks_df.to_csv(f"npeaks_paramscan_batch{args.batch_id}.csv")
 
