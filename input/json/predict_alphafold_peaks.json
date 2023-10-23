@@ -1,0 +1,22 @@
+{
+    "n_contacts":{
+        "start":3,
+        "stop":10,
+        "step":2
+    },
+    "weighted_contacts":{
+        "start":3,
+        "stop":10,
+        "step":2    
+    },
+    "iptm":{
+        "start":0.0,
+        "stop":1,
+        "n":11
+    },
+    "cluster_dist_cutoff":{
+        "start":0.3,
+        "stop":1,
+        "n":8
+    }
+}

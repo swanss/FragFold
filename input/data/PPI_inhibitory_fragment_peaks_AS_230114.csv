@@ -1,0 +1,20 @@
+﻿protein-coding gene,protein-protein interaction inhibitory peak center (aa),30 aa fragment start (aa),30 aa fragment end (aa),protein-protein interaction partner gene(s),Experimental structure name,Protein chain in structure,Fragment chain in structure,overlap with Ncontacts peak?,Ncontacts peak center,Overlap degree (aa),Ncontacts value,weighted contacts peak center,weighted contacts value,notes
+gyrA,26.5,12,41,gyrB,6rks_gyrA_AC_gyrB_BD.pdb,B,A,(TBD),,,,,,
+gyrA,385.5,371,400,gyrA,6rks_gyrA_AC_gyrB_BD.pdb,C,A,yes,385.5,30,3,386.5,2.6,
+ftsZ,130.5,116,145,ftsZ,6unx_ftsZ_ABC.pdb,B,A,yes,129.5,30 (broad peak),4,129.5,2.3,
+ftsZ,177.5,163,192,ftsZ,6unx_ftsZ_ABC.pdb,B,A,yes,176.5,30 (broad peak),8,176.5,6.3,
+ftsZ,200.5,186,215,ftsZ,6unx_ftsZ_ABC.pdb,C,A,yes,201.5,30 (broad peak),15,201.5,11.7,
+ftsZ,272.5,258,287,ftsZ,6unx_ftsZ_ABC.pdb,C,A,yes,271.5,30 (broad peak),8,271.5,6.3,
+ftsZ,367.5,353,382,"ftsZ, ftsA, zipA, minC",N/A,?,A,yes (ftsZ),366.5,29,12,366.5,3.3,no structural data; intrinsically disordered tail region that interacts with multiple proteins
+rplL,19.5,5,34,rplJ,3j7z_rplL_6_rplJ_5.pdb,5,6,yes (rpIL),19.5,30,10,19.5,2.8,
+rplL,19.5,5,34,rplL,1rqu_rplL_AB.pdb,A,C,yes (rpIL),19.5,30,10,19.5,2.8,both a homomeric (with rplL) and heteromeric interaction (with rplJ) is formed by this same region of rplL
+ssb,66.5,52,81,ssb,1eqq_ssb_ABCD.pdb,A,C,"yes (ssb, 1 copy)",71.5,25,6,71.5,4.9,
+ssb,66.5,52,81,ssb2copies,1eqq_ssb_ABCD.pdb,A,C,"yes (ssb, 2 copies)",75.5,21,3,75.5,2.1,
+ssb,66.5,52,81,ssb4copies,1eqq_ssb_ABCD.pdb,A,C,"yes (ssb, 4 copies)",74.5,22,11,74.5,7.4,
+groL,17.5,3,32,groL,1aon_groEL_POUBAGHNM.pdb,"B,G",A,"yes (groL, 1 copy)",15.5,28,5,15.5,4.4,maps to GroEL homomeric heptamer-heptamer interace
+groL,101.5,87,116,groL,1aon_groEL_POUBAGHNM.pdb,"B,H",A,"yes (groL, 1 copy)",106.5,25,5,106.5,4.3,maps to GroEL homomeric heptamer-heptamer interace
+groL,243.5,229,258,groS,1aon_groEL_POUBAGHNM.pdb,O,A,"yes (groS, 1 copy)",252.5,21,10,252.5,4,maps to GroEL ring interface with GroES ring 
+groL,260.5,246,275,groS,1aon_groEL_POUBAGHNM.pdb,"O,G",A,"yes (groS, 1 copy)",260.5,30,8,260.5,5.1,maps to GroEL ring interface with GroES ring 
+groL,445.5,431,460,groL,1aon_groEL_POUBAGHNM.pdb,?,A,"yes (groL, 1 copy)",464.5,11,2,464.5,1.6,maps to GroEL homomeric heptamer-heptamer interace
+groL,500.5,486,515,groL,1aon_groEL_POUBAGHNM.pdb,B,A,"yes (groL, 1 copy)",514.5,16,16,514.5,14,maps to GroEL homomeric heptamer-heptamer interace
+lptG,323.5,309,338,lptF,6mi7_lptG_G_lptF_F.pdb,F,G,(TBD),,,,,,"as in Fig 2H inset, this (TM5) peak maps to a helix-helix interaction with LptF"

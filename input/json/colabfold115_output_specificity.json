@@ -1,0 +1,32 @@
+{
+    "ftsZ-coding-EcoliBL21DE3":
+        {
+        "30aa_monomer_gyrA":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/data/230613_colabfold115_ftsZ_gyrA"
+            },
+        "30aa_monomer_eGFP":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/ftsZ/data/230613_colabfold115_ftsZ_eGFP"
+            }
+        },
+    "gyrA-coding-EcoliBL21DE3":
+        {
+        "30aa_monomer_ftsZ":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/gyrA/data/230727_colabfold115_gyrA-ftsZ"
+            }
+        },
+
+    "EGFP-coding-pEGFP":
+        {
+        "30aa_monomer_ftsZ":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/egfp/data/230613_colabfold115_eGFP_ftsZ"
+            },
+        "30aa_monomer_eGFP":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/egfp/data/230801_colabfold115_eGFP_eGFP"
+            }
+        }
+}
