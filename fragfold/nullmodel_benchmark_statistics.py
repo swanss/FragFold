@@ -20,12 +20,12 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from src.analyze_predictions import *
-from src.peak_prediction import (rangeOverlap,
+from fragfold.src.analyze_predictions import *
+from fragfold.src.peak_prediction import (rangeOverlap,
                                  getResidueOverlapReq,
                                  calculateOverlapBetweenPredandExp,
                                  calculateBenchmarkStatistics)
-from calculate_benchmark_statistics import (benchmark_genes,
+from fragfold.calculate_benchmark_statistics import (benchmark_genes,
                                             benchmark_conditions,
                                             filterLengthsByGene)
 

@@ -20,7 +20,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from src.analyze_predictions import *
+from fragfold.src.analyze_predictions import *
 
 # Create global variables for PDB parsing/writing
 io = PDBIO()

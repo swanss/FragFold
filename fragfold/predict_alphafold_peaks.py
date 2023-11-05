@@ -19,8 +19,8 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from src.analyze_predictions import *
-from src.peak_prediction import filterAlphaFoldPredictions,splitDiscontinuousFragmentSets,clusterOverlappingFragments,organizeClusters,plotClusters
+from fragfold.src.analyze_predictions import *
+from fragfold.src.peak_prediction import filterAlphaFoldPredictions,splitDiscontinuousFragmentSets,clusterOverlappingFragments,organizeClusters,plotClusters
 
 def loadParamsSetFromJSON(path,verbose=True):
     # Define parameter ranges

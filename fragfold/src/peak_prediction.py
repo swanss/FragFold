@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 
 from Bio.PDB import PDBParser
 
-from src.analyze_predictions import *
+from fragfold.src.analyze_predictions import *
 
 # Code inspired by example from https://observablehq.com/@yurivish/peak-detection
 # Also referenced http://constans.pbworks.com/w/file/fetch/120908295/Simple_Algorithms_for_Peak_Detection_in_Time-Series.pdf

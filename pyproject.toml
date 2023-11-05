@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fragfold"
+version = "0.0.1"
+description = ""
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE.txt"}
+keywords = ["fragfold","fragments","peptide","binding","alphafold"]
+authors = [
+  {name = "Andrew Savinov", email = "savinov@mit.edu"},
+  {name = "Sebastian Swanson", email = "swans@mit.edu"}
+]
+maintainers = [
+  {name = "Andrew Savinov", email = "savinov@mit.edu"},
+  {name = "Sebastian Swanson", email = "swans@mit.edu"}
+]
+dependencies = [
+  "biopython",
+  "jupyter",
+  "numpy",
+  "pandas",
+  "seaborn"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]  # list of folders that contain the packages (["."] by default)
+include = ["fragfold"]  # package names should match these glob patterns (["*"] by default)
+exclude = []  # exclude packages matching these glob patterns (empty by default)
+namespaces = false  # to disable scanning PEP 420 namespaces (true by default)
+
+[project.urls]
+Repository = "https://github.com/swanss/FragFold.git"

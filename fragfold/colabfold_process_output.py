@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 
 from Bio.PDB import *
 
-# sys.path.insert(0,'/data1/groups/keatinglab/swans/savinovCollaboration/inhibitory_fragments_structure_prediction')
-from src.colabfold_process_output_utils import *
-from src.analyze_predictions import *
+from fragfold.src.colabfold_process_output_utils import *
+from fragfold.src.analyze_predictions import *
 
 def getRankFromPath(path):
     pat = r"rank_(00)?(\d)"

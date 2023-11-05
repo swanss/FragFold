@@ -1,6 +1,7 @@
 import math
-import random
 import numpy as np
+import os
+import random
 
 def readFastaLines(file):
     header = file.readline().rstrip()
@@ -158,4 +159,58 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
                 output_file.write(new_fragment_sequence)
             count+=1
         
+def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+    '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
+    
+    Args
+    ----
+    a3m_path : str
+        path to an a3m formatted msa file describing the monomeric protein (obtained from colab_mmseqs)
+    name : str
+        name of the monomeric protein
+    protein_range : list
+        an inclusive range defining which positions of the MSA to take from the monomeric protein (sometimes the ends need to be chopped off)
+    fragment_start_range : list
+        an inclusive range defining the range of starting residues for fragments of length `fragment_length`
+    fragment_length : int
+        the number of residues to take when defining a fragment
+    '''
+    dir_name = f"{name}{protein_copies}copies_tile{str(fragment_length)}aa"
+    try:
+        os.makedirs(dir_name, exist_ok=False)
+    except FileExistsError:
+        print('Directory already exists, possibly overwriting existing files')
+            
+    for fragment_start in range(fragment_start_range[0],fragment_start_range[1]-fragment_length+2):
+        fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
+        a3m_out_path = f"{dir_name}/{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m"
+        createMSA(a3m_path, protein_range, fragment_range, -1, a3m_out_path, protein_copies)
         
+def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+    '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
+    
+    Args
+    ----
+    fulllength_a3m_path : str
+        path to an a3m formatted msa file describing the monomeric protein (obtained from colab_mmseqs)    
+    fragment_a3m_path : str
+        path to an a3m formatted msa file describing the protein broken into fragments (obtained from colab_mmseqs)
+    name : str
+        name of the monomeric protein
+    protein_range : list
+        an inclusive range defining which positions of the MSA to take from the monomeric protein (sometimes the ends need to be chopped off)
+    fragment_start_range : list
+        an inclusive range defining the range of starting residues for fragments of length `fragment_length`
+    fragment_length : int
+        the number of residues to take when defining a fragment
+    '''
+    dir_name = f"{fulllength_name}{protein_copies}copies_{fragment_name}tile{str(fragment_length)}aa"
+    try:
+        os.makedirs(dir_name, exist_ok=False)
+    except FileExistsError:
+        print('Directory already exists, possibly overwriting existing files')
+            
+    for fragment_start in range(fragment_start_range[0],fragment_start_range[1]-fragment_length+2):
+        fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
+        a3m_out_path = f"{dir_name}/{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m"
+        createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, a3m_out_path, protein_copies)
