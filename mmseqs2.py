@@ -35,25 +35,29 @@ def main(args):
             print(f"Skipping '{jobname}', file already exists: {filepath}")
             continue
 
+        a3m_lines=None
         msa_mode="mmseqs2_uniref_env"
         use_templates=False
         custom_template_path=None
         pair_mode="unpaired"
         host_url=DEFAULT_API_SERVER
+        user_agent="fragfold"
 
         (unpaired_msa,
         paired_msa, 
         query_seqs_unique, 
         query_seqs_cardinality, 
         template_features) \
-                        = get_msa_and_templates(jobname, 
-                                                query_sequence, 
-                                                result_dir, 
-                                                msa_mode, 
-                                                use_templates, 
-                                                custom_template_path, 
-                                                pair_mode, 
-                                                host_url)
+                        = get_msa_and_templates(jobname=jobname, 
+                                                query_sequence=query_sequence,
+                                                a3m_lines=a3m_lines,
+                                                result_dir=result_dir, 
+                                                msa_mode=msa_mode, 
+                                                use_templates=use_templates, 
+                                                custom_template_path=custom_template_path, 
+                                                pair_mode=pair_mode, 
+                                                host_url=host_url,
+                                                user_agent=user_agent)
 
         msa = msa_to_str(unpaired_msa, paired_msa, query_seqs_unique, query_seqs_cardinality)
         result_dir.joinpath(f"{jobname}.a3m").write_text(msa)
