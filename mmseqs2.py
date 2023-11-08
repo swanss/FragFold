@@ -49,7 +49,7 @@ def main(args):
         query_seqs_cardinality, 
         template_features) \
                         = get_msa_and_templates(jobname=jobname, 
-                                                query_sequence=query_sequence,
+                                                query_sequences=query_sequence,
                                                 a3m_lines=a3m_lines,
                                                 result_dir=result_dir, 
                                                 msa_mode=msa_mode, 
