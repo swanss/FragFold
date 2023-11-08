@@ -10,7 +10,7 @@
 # Set the following parameters
 
 query="ftsZ.fasta"
-COLABFOLD_ENV_DIR=/home/gridsan/asavinov/localcolabfold/colabfold_batch/colabfold-conda
+COLABFOLD_ENV_DIR=~/localcolabfold/colabfold-conda
 REPO_DIR=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold
 
 ### -------------------------------------------------------------------- ###

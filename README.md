@@ -8,7 +8,7 @@ Scripts for predicting how short fragments of natural proteins bind to full-leng
 
 ### 1. Install local colabfold
 
-Follow the instructions at [https://github.com/YoshitakaMo/localcolabfold]() to install ColabFold on your system. We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed).
+Follow the instructions at the local colabfold [repo](https://github.com/YoshitakaMo/localcolabfold) to install ColabFold on your system. We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed).
 
 ### 2. Install fragfold
 
