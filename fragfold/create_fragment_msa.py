@@ -18,26 +18,29 @@ def main(args):
 
     if not args.protein_a3m_input or args.protein_a3m_input == args.fragment_a3m_input:
         # Create monomeric interaction MSAs: fragments of protein A + full-length protein A
-        createIndividualMSAsFullLengthFragment(fragment_a3m,
-                                               fragment_name,
-                                               protein_range,
-                                               fragment_start_range,
-                                               fragment_length,
-                                               protein_copies)
+        msa_path_list = createIndividualMSAsFullLengthFragment(fragment_a3m,
+                                                                fragment_name,
+                                                                protein_range,
+                                                                fragment_start_range,
+                                                                fragment_length,
+                                                                protein_copies)
     else:
         # Create heteromeric interaction MSAs: fragments of protein A + full-length protein B
 
         # In heteromeric interaction mode, we parse more arguments
         fulllengthprotein_a3m_path = args.protein_a3m_input
         fulllengthprotein_name = Path(fulllengthprotein_a3m_path).stem
-        createIndividualMSAsFullLengthFragmentHeteromeric(fulllengthprotein_a3m_path,
-                                                          fulllengthprotein_name,
-                                                          fragment_a3m,
-                                                          fragment_name,
-                                                          protein_range,
-                                                          fragment_start_range,
-                                                          fragment_length,
-                                                          protein_copies)
+        msa_path_list = createIndividualMSAsFullLengthFragmentHeteromeric(fulllengthprotein_a3m_path,
+                                                                        fulllengthprotein_name,
+                                                                        fragment_a3m,
+                                                                        fragment_name,
+                                                                        protein_range,
+                                                                        fragment_start_range,
+                                                                        fragment_length,
+                                                                        protein_copies)
+    with open("a3m_list.txt","w") as file:
+        for path in msa_path_list:
+            file.write(path+"\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

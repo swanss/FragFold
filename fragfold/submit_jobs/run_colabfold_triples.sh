@@ -1,14 +1,20 @@
 #!/bin/bash
 
-module load cuda/11.1
-export PATH="/home/gridsan/sswanson/conda_envs/colabfold_batch/bin:$PATH"
+echo "Running colabfold with arguments: input = ${1}, colabfold_env_dir = {$2}, alphafold_params_dir = ${3}, cuda_version = ${4}"
 
+# Set variables
 input=$1
+colabfold_env_dir=$2
 result_dir=output
-model_type=AlphaFold2-ptm #alt: AlphaFold2-multimer-v1 AlphaFold2-multimer-v2
+model_type=alphafold2_ptm #alt: alphafold2_multimer_v1 alphafold2_multimer_v2 alphafold2_multimer_v3
 pair_mode=unpaired
-data=/data1/groups/keatinglab/alphafold_ss/dataset
+alphafold_params_dir=$3
+cuda_version=$4
 
+module load "cuda/${cuda_version}"
+export PATH="${colabfold_env_dir}/bin:$PATH"
+
+# Create output directory
 if [ ! -d data ]
 then
         mkdir data
@@ -24,10 +30,9 @@ then
         mkdir $result_dir
 fi
 
+# Run ColabFold
 SECONDS=0
-
-echo colabfold_batch $input $result_dir --data $data --model-type $model_type --pair-mode $pair_mode
-colabfold_batch $input $result_dir --data $data --model-type $model_type --pair-mode $pair_mode
-
+echo colabfold_batch $input $result_dir --data $alphafold_params_dir --model-type $model_type --pair-mode $pair_mode
+colabfold_batch $input $result_dir --data $alphafold_params_dir --model-type $model_type --pair-mode $pair_mode
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 echo $ELAPSED

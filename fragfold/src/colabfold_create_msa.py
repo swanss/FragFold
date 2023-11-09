@@ -1,5 +1,6 @@
 import math
 import numpy as np
+from pathlib import Path
 import os
 import random
 
@@ -158,6 +159,31 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
                 output_file.write(new_header)
                 output_file.write(new_fragment_sequence)
             count+=1
+
+def readA3MProteinLength(a3m_path):
+    with open(a3m_path,'r') as file:
+        first_line = file.readline()
+    nResStr = first_line.split()[0]
+    if nResStr[0] != "#":
+        raise ValueError(f"the first line of .a3m file: {a3m_path} should begin with '#'")
+    nRes = int(nResStr[1:])
+    return nRes
+
+def verifyFragmentNterminalResRange(fragment_start_range,fragment_length,protein_n_res):
+    if (len(fragment_start_range) != 2) or \
+       (fragment_start_range[1] < fragment_start_range[0]) or \
+       (fragment_start_range[0] < 1) or \
+       (fragment_start_range[1] > protein_n_res - fragment_length):
+        raise ValueError(f"Provided fragment n-terminal residue range: ({fragment_start_range[0]},{fragment_start_range[1]}) with fragment length: {fragment_length} and a total protein length of {protein_n_res} is invalid")
+    return True
+
+def verifyProteinRange(protein_range,protein_n_res):
+    # Verify that is is possible to extract the desired residues from the protein
+    if (len(protein_range) != 2) or \
+       (protein_range[1] < protein_range[0]) or \
+       (protein_range[0] < 1) or \
+       (protein_range[1] > protein_n_res):
+        raise ValueError(f"Provided protein residue range: ({protein_range[0]},{protein_range[1]}) is invalid")
         
 def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
@@ -175,16 +201,28 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
     fragment_length : int
         the number of residues to take when defining a fragment
     '''
-    dir_name = f"{name}{protein_copies}copies_tile{str(fragment_length)}aa"
+    print("Generating MSAs for a monomeric interaction...")
+
+    # verify residue selections
+    protein_n_res = readA3MProteinLength(a3m_path)
+    verifyFragmentNterminalResRange(fragment_start_range,fragment_length,protein_n_res)
+    verifyProteinRange(protein_range,protein_n_res)
+
+    dir_name = Path(f"{name}{protein_copies}copies_tile{str(fragment_length)}aa")
     try:
-        os.makedirs(dir_name, exist_ok=False)
+        dir_name.mkdir(parents=False,exist_ok=False)
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
-            
-    for fragment_start in range(fragment_start_range[0],fragment_start_range[1]-fragment_length+2):
+    
+    a3m_out_path_list = []
+    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+1)):
         fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
-        a3m_out_path = f"{dir_name}/{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m"
-        createMSA(a3m_path, protein_range, fragment_range, -1, a3m_out_path, protein_copies)
+        a3m_out_path = dir_name.joinpath(f"{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
+        abs_a3m_out_path = a3m_out_path.absolute()
+        print(f"Creating .a3m file: {abs_a3m_out_path}")
+        createMSA(a3m_path, protein_range, fragment_range, -1, abs_a3m_out_path, protein_copies)
+        a3m_out_path_list.append(str(abs_a3m_out_path))
+    return a3m_out_path_list
         
 def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
@@ -204,14 +242,26 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
     fragment_length : int
         the number of residues to take when defining a fragment
     '''
-    dir_name = f"{fulllength_name}{protein_copies}copies_{fragment_name}tile{str(fragment_length)}aa"
+    print("Generating MSAs for a heteromeric interaction...")
+
+    # verify residue selections
+    fulllengthprotein_n_res = readA3MProteinLength(fulllength_a3m_path)
+    fragmentprotein_n_res = readA3MProteinLength(fragment_a3m_path)
+    verifyFragmentNterminalResRange(fragment_start_range,fragment_length,fragmentprotein_n_res)
+    verifyProteinRange(protein_range,fulllengthprotein_n_res)
+
+    dir_name = Path(f"{fulllength_name}{protein_copies}copies_{fragment_name}tile{str(fragment_length)}aa")
     try:
-        os.makedirs(dir_name, exist_ok=False)
+        dir_name.mkdir(parents=False,exist_ok=False)
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
-            
-    print(f"Creating {}")
-    for fragment_start in range(fragment_start_range[0],fragment_start_range[1]-fragment_length+2):
+    
+    a3m_out_path_list = []
+    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+1)):
         fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
-        a3m_out_path = f"{dir_name}/{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m"
-        createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, a3m_out_path, protein_copies)
+        a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
+        abs_a3m_out_path = a3m_out_path.absolute()
+        print(f"Creating .a3m file: {abs_a3m_out_path}")
+        createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
+        a3m_out_path_list.append(str(abs_a3m_out_path))
+    return a3m_out_path_list
