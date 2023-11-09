@@ -173,7 +173,7 @@ def verifyFragmentNterminalResRange(fragment_start_range,fragment_length,protein
     if (len(fragment_start_range) != 2) or \
        (fragment_start_range[1] < fragment_start_range[0]) or \
        (fragment_start_range[0] < 1) or \
-       (fragment_start_range[1] > protein_n_res - fragment_length):
+       (fragment_start_range[1] > protein_n_res - fragment_length + 1):
         raise ValueError(f"Provided fragment n-terminal residue range: ({fragment_start_range[0]},{fragment_start_range[1]}) with fragment length: {fragment_length} and a total protein length of {protein_n_res} is invalid")
     return True
 
