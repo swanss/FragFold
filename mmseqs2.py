@@ -9,16 +9,17 @@ from colabfold.batch import (get_msa_and_templates,
 from colabfold.utils import (DEFAULT_API_SERVER,
                              safe_filename)
 
-def main(args):
-
-    # First check for internet connection
+def verifyConnection():
     conn = httplib.HTTPSConnection("8.8.8.8", timeout=5)
     try: 
         conn.request("HEAD", "/")
     except:
+        conn.close()
         sys.exit(f"Unable to connect to internet, terminating.")
-    conn.close()
+    return True
 
+def main(args):
+    connection_verified = False
     result_dir = "mmseqs2_a3m"
     result_dir = Path(result_dir)
     result_dir.mkdir(exist_ok=True)
@@ -34,6 +35,8 @@ def main(args):
         if filepath.is_file():
             print(f"Skipping '{jobname}', file already exists: {filepath}")
             continue
+        elif connection_verified != True:
+            connection_verified = verifyConnection()
 
         a3m_lines=None
         msa_mode="mmseqs2_uniref_env"

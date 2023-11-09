@@ -40,7 +40,10 @@ def main(args):
                                                           protein_copies)
 
 if __name__ == "__main__":
-    parser = argparse()
+    parser = argparse.ArgumentParser(
+        prog='create_fragment_msa',
+        description='For processing MSAs into fragment + full-length protein MSAs'
+    )
     parser.add_argument(
         "--fragment_a3m_input",
         type=Path,

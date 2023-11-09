@@ -210,6 +210,7 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
             
+    print(f"Creating {}")
     for fragment_start in range(fragment_start_range[0],fragment_start_range[1]-fragment_length+2):
         fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
         a3m_out_path = f"{dir_name}/{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m"

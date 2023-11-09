@@ -10,7 +10,8 @@
 # Set the following parameters
 
 REPO_DIR=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold
-COLABFOLD_ENV_DIR=/home/gridsan/asavinov/localcolabfold/colabfold_batch/colabfold-conda
+COLABFOLD_ENV_DIR=~/localcolabfold/colabfold-conda
+CONDA_ENV_NAME=fragfold
 
 # MSA generation
 query_seq=ftsZ.fasta # can be a single .fasta, or a directory containing many .fasta
@@ -43,7 +44,7 @@ else
 fi
 
 ### Create fragment + full-length MSAs
-if python ${REPO_DIR}/fragfold/create_fragment_msa.py \
+if conda run --no-capture-output -n $CONDA_ENV_NAME python ${REPO_DIR}/fragfold/create_fragment_msa.py \
     --fragment_a3m_input ${PWD}/mmseqs2_a3m/{$fragment_a3m_name}.a3m \
     --fragment_ntermres_start $fragment_ntermres_start \
     --fragment_ntermres_final $fragment_ntermres_final \
