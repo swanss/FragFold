@@ -21,7 +21,7 @@ experimental_data=$repo_dir/input/data/Savinov_2022_inhib_peptide_mapping.csv
 
 SECONDS=0
 
-conda run --no-capture-output -n $conda_env_name python $REPO/fragfold/colabfold_process_output.py \
+conda run --no-capture-output -n $conda_env_name python $repo_dir/fragfold/colabfold_process_output.py \
     --import_json $import_json \
     --experimental_data $experimental_data
 

@@ -1,3 +1,4 @@
+from pathlib import Path
 import glob, json, argparse, os, sys, re, functools
 import string
 import multiprocessing as mp
@@ -127,7 +128,8 @@ def get_contact_dataframe(colab_path,contact_distance_cutoff,n_workers=1):
 
 def main(args):
     # Load JSON file specifying where to import colabfold results from
-    json_path = args.import_json
+    json_path = Path(args.import_json)
+    assert json_path.is_file()
     print(f"Loading JSON file specifying where colabfold results are located: {json_path}")
     # n_workers = mp.cpu_count() 
     n_workers = len(os.sched_getaffinity(0))
@@ -149,10 +151,12 @@ def main(args):
             print('condition:',condition)
 
             # Load confidence (pLDDT/iPTM)
-            confidence_df = get_confidence_dataframe(colab_results[gene_name][condition]['colabfold'],n_workers)
+            path = Path(colab_results[gene_name][condition]['colabfold'])
+            assert path.is_dir()
+            confidence_df = get_confidence_dataframe(path,n_workers)
 
             # Count contacts
-            contacts_df = get_contact_dataframe(colab_results[gene_name][condition]['colabfold'],contact_distance_cutoff,n_workers)
+            contacts_df = get_contact_dataframe(path,contact_distance_cutoff,n_workers)
 
             # TODO calculate RMSD
 

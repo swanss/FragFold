@@ -26,11 +26,13 @@ pip install .
 
 As an alternative to the above steps, you can also use the provided docker container: `fragfold_img`
 
-# Examples
+# Example
 
-The following are examples derived from the manuscript.
+The following are example is derived from the manuscript.
 
 ## Predict homomeric interactions between full-length FtsZ and fragments
+
+### Submit ColabFold jobs
 
 If you're working on a cluster where the compute nodes have internet access
 
@@ -50,3 +52,25 @@ bash submit_mmseqs2.sh
 sbatch submit_fragfold.sh 
 ```
 
+### Process output
+
+First, create a `.json` file with paths to the output of the FragFold jobs.
+
+'''
+{
+    "ftsZ-coding-EcoliBL21DE3":
+        {
+        "30aa_monomer_ftsZ":
+            {
+            "colabfold":"/path/to/output/" #REPLACE
+            }
+        }
+}
+'''
+
+Copy the script to the directory, set the input variables, and then run.
+
+'''
+cp ../fragfold/submit_jobs/run_colabfold_process_output.sh .
+sbatch run_colabfold_process_output.sh
+'''
