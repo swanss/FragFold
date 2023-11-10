@@ -215,7 +215,7 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
         print('Directory already exists, possibly overwriting existing files')
     
     a3m_out_path_list = []
-    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+1)):
+    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2)):
         fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
         a3m_out_path = dir_name.joinpath(f"{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
         abs_a3m_out_path = a3m_out_path.absolute()
@@ -257,7 +257,7 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
         print('Directory already exists, possibly overwriting existing files')
     
     a3m_out_path_list = []
-    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+1)):
+    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2)):
         fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
         a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
         abs_a3m_out_path = a3m_out_path.absolute()
