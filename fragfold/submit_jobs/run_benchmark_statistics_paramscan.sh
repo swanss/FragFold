@@ -18,14 +18,12 @@ exp_peaks_known_csv=$REPO/input/data/PPI_inhibitory_fragment_peaks_AS_230114.csv
 SECONDS=0
 
 conda run -n $CONDA_ENV --no-capture-output python $REPO/fragfold/calculate_benchmark_statistics.py \
+    --batch_id $LLSUB_RANK \
     --pred_peaks_csv $pred_peaks_csv \
     --exp_peaks_csv $exp_peaks_csv \
     --exp_peaks_known_csv $exp_peaks_known_csv \
     --by_gene \
-    --min_cluster_size 6 \
-    --cluster_peaks_frac_overlap 0.7 \
-    --store_intermediate
-
+    --cluster_peaks_frac_overlap 0.8
 
 ELAPSED="Elapsed: $(($SECONDS / 3600))hrs $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 echo $ELAPSED

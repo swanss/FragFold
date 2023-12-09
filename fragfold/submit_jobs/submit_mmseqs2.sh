@@ -28,4 +28,8 @@ if [ ! -z "$3" ]; then
     REPO_DIR=$3
 fi
 
+echo "query: "$query
+echo "COLABFOLD_ENV_DIR: "$COLABFOLD_ENV_DIR
+echo "REPO_DIR: "$REPO_DIR
+
 conda run --no-capture-output -p $COLABFOLD_ENV_DIR python $REPO_DIR/mmseqs2.py --query $query

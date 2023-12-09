@@ -23,7 +23,8 @@ dependencies = [
   "jupyter",
   "numpy",
   "pandas",
-  "seaborn"
+  "scipy",
+  "seaborn",
 ]
 
 [tool.setuptools.packages.find]

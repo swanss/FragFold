@@ -62,7 +62,10 @@ def load_confidence_data(path):
 
 def get_confidence_dataframe(colab_path,n_workers=1):
 
-    all_paths = glob.glob(os.path.join(colab_path,"data/*/output/log.txt"))
+    glob_path = str(Path(colab_path).joinpath("data/*/output/log.txt"))
+    all_paths = glob.glob(glob_path)
+    if len(all_paths) <= 0:
+        raise ValueError(f"Unable to find colabfold output in the directory: {glob_path}")
 
     if n_workers > 1:
         with mp.Pool(n_workers) as pool:
@@ -151,7 +154,7 @@ def main(args):
             print('condition:',condition)
 
             # Load confidence (pLDDT/iPTM)
-            path = Path(colab_results[gene_name][condition]['colabfold'])
+            path = Path(colab_results[gene_name][condition]['colabfold']).absolute()
             assert path.is_dir()
             confidence_df = get_confidence_dataframe(path,n_workers)
 

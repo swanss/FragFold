@@ -1,17 +1,6 @@
-import glob, json
-from dataclasses import dataclass
-
-import math
-import numpy as np
-import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from matplotlib.patches import Patch
-import time
-
 from Bio.PDB import *
 
-import glob, json, argparse, os, sys, re, functools, itertools, random
+import glob, json, argparse, os, sys, re, functools, itertools, random, math
 import string
 import multiprocessing as mp
 
@@ -21,13 +10,13 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from fragfold.src.analyze_predictions import *
-from fragfold.src.peak_prediction import (rangeOverlap,
-                                 getResidueOverlapReq,
-                                 calculateOverlapBetweenPredandExp,
-                                 calculateBenchmarkStatistics)
-from fragfold.calculate_benchmark_statistics import (benchmark_genes,
-                                            benchmark_conditions,
-                                            filterLengthsByGene)
+from fragfold.src.peak_prediction import (clusterOverlap,
+                                        calculateOverlapBetweenPredandExp,
+                                        calculateBenchmarkStatistics,
+                                        peakResLength)
+from fragfold.calculate_benchmark_statistics_paramscan import (benchmark_genes,
+                                                               benchmark_conditions,
+                                                               filterLengthsByGene)
 
 benchmark_gene_fragment_start_range = {
     'ftsZ-coding-EcoliBL21DE3':(1,383),
@@ -55,6 +44,54 @@ def randomizePredictedPeakPositions(peak_df,avg_peak_widths=False):
         copy_peak_df['cluster last fragment center (aa)'] = copy_peak_df['cluster first fragment center (aa)'] + copy_peak_df['cluster width (aa)']
 
     return copy_peak_df
+
+def randomizePredictedPeakPositionsNoOverlap(peak_df,
+                                             group_vars=['gene','condition'],
+                                             avg_peak_widths=False,
+                                             maxFracOverlapToExistingPeak=0.7):
+    '''
+    This version of the function verifies that a peak does not overlap any existing ones by more than maxFracOverlapToExistingPeak
+    '''
+    copy_peak_df = peak_df.copy(deep=True)
+
+    # drop values that will no longer have meaning after randomizing predicted peak positions
+    copy_peak_df.drop(columns=['fragment start (aa)', 'fragment center (aa)', 'fragment end (aa)',
+                               'cluster first residue', 'cluster last residue'])
+    copy_peak_df['cluster width (aa)'] = copy_peak_df['cluster last fragment center (aa)'] - copy_peak_df['cluster first fragment center (aa)']
+    if avg_peak_widths:
+        copy_peak_df['cluster width (aa)'] = np.round(copy_peak_df['cluster width (aa)'].mean())
+        copy_peak_df['cluster last fragment center (aa)'] = copy_peak_df['cluster first fragment center (aa)'] + copy_peak_df['cluster width (aa)']
+
+    all_resampled_peaks_df_list = []
+    for (gene,condition),group_df in copy_peak_df.groupby(group_vars):
+        resampled_peaks_list = []
+        for i,peak in group_df.iterrows():
+            overlapsExistingPeak = True
+            first_center = -1
+            while overlapsExistingPeak:
+                # try sampling new positions for the peak
+                peak['cluster first fragment center (aa)'] = random.randint(*benchmark_gene_fragment_start_range[peak['gene']])
+                peak['cluster last fragment center (aa)'] = peak['cluster first fragment center (aa)'] + peak['cluster width (aa)']
+
+                # check if it overlaps a peak that was already placed
+                overlapsExistingPeak = False
+                for placed_peak in resampled_peaks_list:
+                    smaller_peak,larger_peak = (peak,placed_peak) if peakResLength(peak) <= peakResLength(placed_peak) else (placed_peak,peak)
+                    if clusterOverlap(smaller_peak,larger_peak) >= maxFracOverlapToExistingPeak:
+                        print("Peak overlaps existing peak: resample")
+                        overlapsExistingPeak = True
+                        break
+            
+            resampled_peaks_list.append(peak)
+                
+        resampled_group_df = pd.DataFrame(resampled_peaks_list)
+        resampled_group_df['gene'] = gene
+        resampled_group_df['condition'] = condition
+        all_resampled_peaks_df_list.append(resampled_group_df)
+
+    resampled_peaks_df = pd.concat(all_resampled_peaks_df_list,ignore_index=True)
+
+    return resampled_peaks_df
 
 def main(args):
     ### EXP peaks
@@ -110,7 +147,15 @@ def main(args):
     k_stop = min(args.n_samples,(args.batch_id+1)*batch_size)
     for k in range(k_start,k_stop):
         random.seed(args.random_seed+k)
-        filt_pred_df = randomizePredictedPeakPositions(orig_filt_pred_df,args.avg_peak_widths)
+
+        if (args.cluster_peaks_frac_overlap > 0 and args.cluster_peaks_frac_overlap < 1):
+            print(f"Randomize with a check to ensure no peaks have > {args.cluster_peaks_frac_overlap} overlap")
+            filt_pred_df = randomizePredictedPeakPositionsNoOverlap(orig_filt_pred_df,
+                                                                    avg_peak_widths=args.avg_peak_widths,
+                                                                    maxFracOverlapToExistingPeak=args.cluster_peaks_frac_overlap)
+        else:
+            print(f"Randomize the position of each peak independently")
+            filt_pred_df = randomizePredictedPeakPositions(orig_filt_pred_df,args.avg_peak_widths)
         if (args.store_intermediate):
             filt_pred_df.to_csv(f"filtered_predicted_peaks_sample{k}.csv")
         print(f"There are {len(pred_df)} peaks in the original predicted peaks data and {len(filt_pred_df)} after filtering for predicted peaks in the benchmark")
@@ -162,6 +207,8 @@ if __name__ == "__main__":
     parser.add_argument('--exp_peaks_known_csv',type=str,required=True)
     parser.add_argument('--store_intermediate',action='store_true')
     parser.add_argument('--by_gene',action='store_true')
+    parser.add_argument('--cluster_peaks_frac_overlap',type=float,default=-1.0,
+                        help='If provided (i.e. value is in the range (0,1)), will cluster predicted peaks before calculating overlap statistics')
 
     args = parser.parse_args()
     print(args)

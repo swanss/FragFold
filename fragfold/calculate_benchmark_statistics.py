@@ -1,6 +1,4 @@
-import glob, json
-from dataclasses import dataclass
-
+import math
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -20,32 +18,14 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from fragfold.src.analyze_predictions import *
-from fragfold.src.peak_prediction import rangeOverlap,getResidueOverlapReq,calculateOverlapBetweenPredandExp,calculateBenchmarkStatistics
-
-benchmark_genes = {
-'ftsZ-coding-EcoliBL21DE3',
-'groL-coding-EcoliBL21DE3',
-'gyrA-coding-EcoliBL21DE3',
-'lptG-coding-EcoliBL21DE3',
-'rplL-coding-EcoliBL21DE3',
-'ssb-coding-EcoliBL21DE3'
-}
-benchmark_conditions = {
-'30aa_monomer_ftsZ', '30aa_monomer_ftsA', '30aa_monomer_zipA', '30aa_monomer_minC',
-'30aa_monomer_groL', '30aa_monomer_groS', '30aa_monomer_gyrA',
-'30aa_monomer_gyrB', '30aa_monomer_rplL', '30aa_monomer_rplJ', '30aa_dimer_ssb', '30aa_tetramer_ssb',
-'30aa_monomer_ssb', '30aa_monomer_lptG', '30aa_monomer_lptF'
-}
-
-def filterLengthsByGene(df):
-    # separate function so that it can be easily identified/modified for future iterations where things change
-    filt_df = df[(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment length (aa)']==14)|
-                 ~(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment length (aa)']==30)]
-    print(f"There are {len(df)} peaks in the original df and {len(filt_df)} after filtering by lengths")
-    return filt_df
+from fragfold.src.peak_prediction import (clusterPeaksByOverlap,
+                                            calculateOverlapBetweenPredandExp,
+                                            calculateBenchmarkStatistics)
+from fragfold.calculate_benchmark_statistics_paramscan import (benchmark_genes,
+                                            benchmark_conditions,
+                                            filterLengthsByGene)
 
 def main(args):
-
     ### EXP peaks
     # Load experimental data and filter by benchmark genes
     path = args.exp_peaks_csv
@@ -54,7 +34,7 @@ def main(args):
     # filt_exp_df = filterLengthsByGene(exp_df[(exp_df['gene'].isin(benchmark_genes))]).copy(deep=True)
     filt_exp_df = exp_df[(exp_df['gene'].isin(benchmark_genes))]
     filt_exp_df = filterLengthsByGene(filt_exp_df).copy(deep=True)
-    if (args.batch_id == 0):
+    if (args.store_intermediate):
         filt_exp_df.to_csv("filtered_experimental_peaks.csv")
     print(f"There are {len(exp_df)} peaks in the original experimental data and {len(filt_exp_df)} after filtering for genes in the benchmark")
 
@@ -88,78 +68,69 @@ def main(args):
     path = args.pred_peaks_csv
     pred_df = pd.read_csv(path,index_col=0)
     filt_pred_df = filterLengthsByGene(pred_df[(pred_df['gene'].isin(benchmark_genes))&(pred_df['condition'].isin(benchmark_conditions))]).copy(deep=True)
-    filt_pred_df.to_csv(f"filtered_predicted_peaks_batch{args.batch_id}.csv")
-    print(f"There are {len(pred_df)} peaks in the original predicted peaks data and {len(filt_pred_df)} after filtering for predicted peaks in the benchmark")
 
-    # Find overlap
+    # Verify that we are considering a single set of peak prediction parameters
     params_list = ['n_contacts_cutoff','n_weighted_contacts_cutoff','iptm_cutoff','contact_distance_cutoff']
-    if 'dG_separated_cutoff' in set(filt_pred_df.columns):
-        params_list.append('dG_separated_cutoff')
-        grouped_pred_df = filt_pred_df.groupby(params_list)
-        print(grouped_pred_df.ngroups)
+    assert filt_pred_df.groupby(params_list).ngroups == 1
+
+    pred_df_list = []
+    overlap_df_list = []
+    stat_df_list = []
+
+    for min_cluster_size in range(1,50):
+        print(f"min_cluster_size = {min_cluster_size}")
+        # Filter by cluster size and merge highly overlapping clusters
+        print(f"Dataframe has {len(filt_pred_df)} peaks. Filtering out peaks with size < {min_cluster_size}")
+        clus_filt_pred_df = filt_pred_df[filt_pred_df['cluster_n_fragments'] >= min_cluster_size].copy(deep=True)
+        print(f"After filtering, {len(clus_filt_pred_df)} peaks remain")
+        if clus_filt_pred_df.shape[0] == 0:
+            continue
+
+        if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
+            print("Merging overlapping peaks...")
+            clus_filt_pred_df = clusterPeaksByOverlap(clus_filt_pred_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+            print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
+        clus_filt_pred_df['cluster_n_fragments_threshold'] = min_cluster_size
+
+        # Find overlap
+        assert clus_filt_pred_df.groupby(params_list).ngroups == 1 # just in case something changed in the DF...
         res_overlap_frac_cutoffs = np.arange(15,31)/30 # convert to fractions to apply to different fragment lengths
-        overlap_df_list = []
-        stat_df_list = []
-        for (n_contacts,nweighted_contacts,iptm,contact_cutoff,dG_separated_cutoff),group_df in grouped_pred_df:
-            print(n_contacts,nweighted_contacts,iptm,contact_cutoff,dG_separated_cutoff)
-            overlap_df = calculateOverlapBetweenPredandExp(group_df,filt_exp_df,res_overlap_frac_cutoffs)
-            stat_df = calculateBenchmarkStatistics(overlap_df,filt_exp_df,30,args.by_gene)
+        overlap_df = calculateOverlapBetweenPredandExp(clus_filt_pred_df,filt_exp_df,res_overlap_frac_cutoffs)
+        overlap_df['cluster_n_fragments_threshold'] = min_cluster_size
+        stat_df = calculateBenchmarkStatistics(overlap_df,filt_exp_df,30,(0,30),args.by_gene)
+        stat_df['cluster_n_fragments_threshold'] = min_cluster_size
 
-            overlap_df['n_contacts_cutoff'] = n_contacts
-            overlap_df['n_weighted_contacts_cutoff'] = nweighted_contacts
-            overlap_df['iptm_cutoff'] = iptm
-            overlap_df['contact_distance_cutoff'] = contact_cutoff
-            overlap_df['dG_separated_cutoff'] = dG_separated_cutoff
-            overlap_df['batch'] = args.batch_id 
-            overlap_df_list.append(overlap_df)
+        # print("Check cluster_n_fragments_threshold in dfs")
+        # for df in pred_df_list:
+        #     if df.shape[0] > 0:
+        #         print(df.iloc[0]['cluster_n_fragments_threshold'])
 
-            stat_df['n_contacts_cutoff'] = n_contacts
-            stat_df['n_weighted_contacts_cutoff'] = nweighted_contacts
-            stat_df['iptm_cutoff'] = iptm
-            stat_df['contact_distance_cutoff'] = contact_cutoff
-            stat_df['dG_separated_cutoff'] = dG_separated_cutoff
-            stat_df['batch'] = args.batch_id 
-            stat_df_list.append(stat_df)
-    else:
-        grouped_pred_df = filt_pred_df.groupby(params_list)
-        print(grouped_pred_df.ngroups)
-        res_overlap_frac_cutoffs = np.arange(15,31)/30 # convert to fractions to apply to different fragment lengths
-        overlap_df_list = []
-        stat_df_list = []
-        for (n_contacts,nweighted_contacts,iptm,contact_cutoff),group_df in grouped_pred_df:
-            print(n_contacts,nweighted_contacts,iptm,contact_cutoff)
-            overlap_df = calculateOverlapBetweenPredandExp(group_df,filt_exp_df,res_overlap_frac_cutoffs)
-            stat_df = calculateBenchmarkStatistics(overlap_df,filt_exp_df,30,args.by_gene)
+        pred_df_list.append(clus_filt_pred_df)
+        overlap_df_list.append(overlap_df)
+        stat_df_list.append(stat_df)
 
-            overlap_df['n_contacts_cutoff'] = n_contacts
-            overlap_df['n_weighted_contacts_cutoff'] = nweighted_contacts
-            overlap_df['iptm_cutoff'] = iptm
-            overlap_df['contact_distance_cutoff'] = contact_cutoff
-            overlap_df['batch'] = args.batch_id 
-            overlap_df_list.append(overlap_df)
+    filt_pred_df = pd.concat(pred_df_list,ignore_index=True)
+    overlap_df = pd.concat(overlap_df_list,ignore_index=True)
+    stat_df = pd.concat(stat_df_list,ignore_index=True)
 
-            stat_df['n_contacts_cutoff'] = n_contacts
-            stat_df['n_weighted_contacts_cutoff'] = nweighted_contacts
-            stat_df['iptm_cutoff'] = iptm
-            stat_df['contact_distance_cutoff'] = contact_cutoff
-            stat_df['batch'] = args.batch_id 
-            stat_df_list.append(stat_df)
-    comb_overlap_df = pd.concat(overlap_df_list,ignore_index=True)
-    comb_stat_df = pd.concat(stat_df_list,ignore_index=True)
-
-    comb_overlap_df.to_csv(f"overlap_batch{args.batch_id}.csv")
-    comb_stat_df.to_csv(f"benchmark_statistics_batch{args.batch_id}.csv")
-
+    if (args.store_intermediate):
+        filt_pred_df.to_csv("predicted_peaks_filteredbyclustersize_mergeoverlappingpeaks.csv")
+        overlap_df.to_csv(f"overlap.csv")
+    stat_df.to_csv(f"benchmark_statistics.csv")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog = 'calculateBenchmarkStatistics',
-        description = 'Script for calculating benchmark statistics given clustering results')
-    parser.add_argument('--batch_id',type=int)
+        description = 'Script for calculating benchmark statistics given clustering results for a single set of parameters with randomized predicted peak positions')
     parser.add_argument('--pred_peaks_csv',type=str,required=True)
     parser.add_argument('--exp_peaks_csv',type=str,required=True)
     parser.add_argument('--exp_peaks_known_csv',type=str,required=True)
+    parser.add_argument('--store_intermediate',action='store_true')
     parser.add_argument('--by_gene',action='store_true')
+    # parser.add_argument('--min_cluster_size_',type=int,default=6,
+    #                     help='Predicted peaks with a smaller size than this will be filtered out prior to peak clustering (column == `cluster_n_fragments` in the table)')
+    parser.add_argument('--cluster_peaks_frac_overlap',type=float,default=-1.0,
+                        help='If provided (i.e. value is in the range (0,1)), will cluster predicted peaks before calculating overlap statistics')
 
     args = parser.parse_args()
     print(args)

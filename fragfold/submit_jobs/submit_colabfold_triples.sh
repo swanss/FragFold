@@ -1,22 +1,18 @@
 #!/bin/bash
 
-# ### -------------------------------------------------------------------- ###
-# # Set the following parameters
-
-# query="ftsZ.fasta"
-# 
-# colabfold_env_dir=~/localcolabfold/colabfold-conda
-# repo_dir=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold
-
-# ### -------------------------------------------------------------------- ###
-
 a3m_list_file=A3M_LIST_FILE
 colabfold_env_dir=COLABFOLD_ENV_DIR
 alphafold_params_dir=ALPHAFOLD_PARAMS_DIR
 repo_dir=REPO_DIR
 cuda_version=CUDA_VERSION
 
-echo "Submitting colabfold jobs with arguments: a3m_list_file = ${a3m_list_file}, colabfold_env_dir = {$colabfold_env_dir}, alphafold_params_dir = ${alphafold_params_dir}, repo_dir = ${repo_dir}, cuda_version = ${cuda_version}"
+echo "a3m_list_file: "$a3m_list_file
+echo "colabfold_env_dir: "$colabfold_env_dir
+echo "alphafold_params_dir: "$alphafold_params_dir
+echo "repo_dir: "$repo_dir
+echo "cuda_version: "$cuda_version
+
+echo "Submitting colabfold jobs..."
 
 . /etc/profile.d/modules.sh
 readarray -t RUNLIST < $a3m_list_file

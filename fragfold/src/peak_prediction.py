@@ -1,4 +1,4 @@
-import glob, json, os, shutil
+import glob, json, os, shutil, itertools
 from dataclasses import dataclass
 
 import numpy as np
@@ -484,7 +484,11 @@ def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     })
     return overlap_df
 
-def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=False):
+def calculateBenchmarkStatistics(overlap_df,
+                                 exp_df,
+                                 maxFragmentLength,
+                                 minClusterSizeRange=(0,15),
+                                 byGene=False):
 
     nExpPeaks = len(exp_df)
     nExpKnownPeaks = len(exp_df[exp_df['peak type']=='known'])
@@ -513,9 +517,11 @@ def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=Fals
     geneName = ""
     genesList = list(overlap_df.gene.unique()) if byGene else [""]
     print(f"Genes: {genesList}")
-    for minClusterSize in range(1,15):
+    for minClusterSize in range(minClusterSizeRange[0],minClusterSizeRange[1]):
         for resOverlapReq in range(15,maxFragmentLength+1):
             for geneName in genesList:
+                # iterate over discrete residue overlap lengths for convenience: but in reality we use the fraction
+                # to account for the fact that fragments have different lengths
                 resOverlapFrac = resOverlapReq/maxFragmentLength
                 if geneName == "":
                     filt_overlap_df = overlap_df[(overlap_df['pred cluster n fragments']>=minClusterSize)&
@@ -529,7 +535,6 @@ def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=Fals
                 noverlappredpeaks = filt_overlap_df[filt_overlap_df['overlap']==True].groupby('pred cluster id').ngroups
                 
                 minClusterSize_list.append(minClusterSize)
-                resOverlapReq_list.append(resOverlapReq)
                 resOverlapFrac_list.append(resOverlapFrac)
                 
                 ntotalpredpeaks_list.append(ntotalpredpeaks)
@@ -551,7 +556,6 @@ def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=Fals
     if len(genename_list) == 0:
         stat_df = pd.DataFrame({'min cluster size':minClusterSize_list,
                                 'overlap frac req':resOverlapFrac_list,
-                                'overlap req':resOverlapReq_list,
                                 '# exp peaks':nExpPeaks,
                                 '# pred peaks':ntotalpredpeaks_list,
                                 '# overlap exp peaks':noverlapexppeaks_list,
@@ -564,7 +568,6 @@ def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=Fals
         stat_df = pd.DataFrame({'gene':genename_list,
                                 'min cluster size':minClusterSize_list,
                                 'overlap frac req':resOverlapFrac_list,
-                                'overlap req':resOverlapReq_list,
                                 '# exp peaks':nExpPeaks_list,
                                 '# pred peaks':ntotalpredpeaks_list,
                                 '# overlap exp peaks':noverlapexppeaks_list,
@@ -577,3 +580,161 @@ def calculateBenchmarkStatistics(overlap_df,exp_df,maxFragmentLength,byGene=Fals
     stat_df['% known inhibitory peaks predicted'] = 100 * stat_df['# overlap known exp peaks'] / stat_df['# known exp peaks']
     stat_df['% predicted peaks inhibitory'] = 100 * stat_df['# overlap pred peaks'] / stat_df['# pred peaks']
     return stat_df
+
+# Functions for merging predicted peaks based on residue overlap
+
+def mergeAllPeaks(peak_list):
+    '''
+    This is a surprisingly tricky function, mostly due to bad design on my part. The peak series
+    contain two kinds of data: data describing the representative fragment and data summarizing 
+    the peak as a whole. The two types of data need to be propagated differently. 
+    
+    note: cluster_n_fragments may be overestimated from summing (there may be overlap between the merged
+    cluster)
+    '''
+    
+    # Create a dataframe containing all peaks
+    peak_set_df = pd.DataFrame(peak_list)
+    
+    # Select the "representative fragment" by weighted contacts
+    rep_fragment = peak_set_df.loc[peak_set_df['weighted_contacts'].idxmin()]
+
+    result = {
+        'fragment_name':rep_fragment.fragment_name,
+        'rank':rep_fragment['rank'],
+        'fragment start (aa)':rep_fragment['fragment start (aa)'],
+        'fragment center (aa)':rep_fragment['fragment center (aa)'],
+        'fragment end (aa)':rep_fragment['fragment end (aa)'],
+        'plddt':rep_fragment['plddt'],
+        'ptm':rep_fragment['ptm'],
+        'iptm':rep_fragment['iptm'],
+        'n_contacts':rep_fragment['n_contacts'],
+        'path':rep_fragment['path'],
+        'protein_chains':rep_fragment['protein_chains'],
+        'fragment_chain':rep_fragment['fragment_chain'],
+        'weighted_contacts':rep_fragment['weighted_contacts'],
+        'gene':rep_fragment['gene'],
+        'condition':rep_fragment['condition'],
+        'fragment length (aa)':rep_fragment['fragment length (aa)'],
+        'cluster':list(set(itertools.chain.from_iterable(peak_set_df['cluster']))),
+        'cluster_size':peak_set_df['cluster_size'].sum(),
+        'cluster_n_fragments':peak_set_df['cluster_n_fragments'].sum(),
+        'cluster first fragment center (aa)':peak_set_df['cluster first fragment center (aa)'].min(),
+        'cluster last fragment center (aa)':peak_set_df['cluster last fragment center (aa)'].max(),
+        'cluster first residue':peak_set_df['cluster first fragment center (aa)'].min() - (rep_fragment['fragment length (aa)']-1)/2,
+        'cluster last residue':peak_set_df['cluster last fragment center (aa)'].max() + (rep_fragment['fragment length (aa)']-1)/2,
+        'n_contacts_cutoff':rep_fragment['n_contacts_cutoff'],
+        'n_weighted_contacts_cutoff':rep_fragment['n_weighted_contacts_cutoff'],
+        'iptm_cutoff':rep_fragment['iptm_cutoff'],
+        'contact_distance_cutoff':rep_fragment['contact_distance_cutoff']
+    }
+    return result
+
+def clusterOverlap(smaller_peak,larger_peak, verbose=False):
+    '''
+    Calculate what fraction of the smaller peaks residues are contained in the larger peak
+    
+    Function is less fancy and slower because it explicitly compares all residues, but it's easier to debug :)
+    '''
+    assert peakResLength(smaller_peak) <= peakResLength(larger_peak), (smaller_peak['fragment length (aa)'],larger_peak['fragment length (aa)'])
+    assert smaller_peak['fragment length (aa)'] == larger_peak['fragment length (aa)'], (smaller_peak['fragment length (aa)'],larger_peak['fragment length (aa)'])
+    fragment_half_length = (smaller_peak['fragment length (aa)']-1)/2
+    sp_res_start = int(smaller_peak['cluster first fragment center (aa)'] - fragment_half_length)
+    sp_res_stop = int(smaller_peak['cluster last fragment center (aa)'] + fragment_half_length)
+    sp_res_set = set(x for x in range(sp_res_start,sp_res_stop+1))
+    
+    lp_res_start = int(larger_peak['cluster first fragment center (aa)'] - fragment_half_length)
+    lp_res_stop = int(larger_peak['cluster last fragment center (aa)'] + fragment_half_length)
+    lp_res_set = set(x for x in range(lp_res_start,lp_res_stop+1))
+    
+    
+    n_overlapping_res = len(sp_res_set.intersection(lp_res_set))
+    n_total_res_sp = len(sp_res_set)
+    frac_overlapping = n_overlapping_res/n_total_res_sp
+    if verbose:
+        print(f"smaller peak:{sp_res_set}")
+        print(f"larger peak:{lp_res_set}")
+        print(f"intersection peak:{sp_res_set.intersection(lp_res_set)}")
+        print(f"n overlapping = {n_overlapping_res}, n_total_res_sp = {n_total_res_sp}")
+    return frac_overlapping
+
+def peakResLength(peak):
+    fragment_half_length = (peak['fragment length (aa)']-1)/2
+    return peak['cluster last fragment center (aa)']-peak['cluster first fragment center (aa)']+(2*fragment_half_length)
+    
+def clusterPeaksByOverlapGroupedDF(peak_df,
+                                    frac_overlap=0.7,
+                                    verbose=False):
+    assert peak_df.condition.nunique() == 1
+    assert peak_df.gene.nunique() == 1
+    assert peak_df['fragment length (aa)'].nunique() == 1
+    
+    # n_res_overlap = math.ceil(frac_overlap*peak_df['fragment length (aa)'].unique())
+    
+    peak_df = peak_df.copy(deep=True).reset_index().sort_values(by='weighted_contacts',ascending=False)
+    peak_df['cluster'] = peak_df['cluster'].apply(lambda x: [x])
+    remaining_peaks = set(x for x in range(len(peak_df)))
+    
+    cluster_data = []
+    
+    # return peak_df
+    
+    if verbose:
+        print(f"remaining_peaks: {remaining_peaks}")
+    for i,center_peak in peak_df.iterrows():
+        if verbose:
+            print(f"i,center_peak: {i}")
+        if i in remaining_peaks:
+            if verbose:
+                print(f"center_peak: ({center_peak['cluster first residue']},{center_peak['cluster last residue']})")
+            # remove, as it will become the center of a cluster
+            cluster_members = [i]
+            remaining_peaks.remove(i)
+            if verbose:
+                print(f"remove: {i}")
+                print(f"remaining_peaks: {remaining_peaks}")
+            
+            # of all the remaining peaks, find those with sufficient overlap and add them to the cluster
+            if verbose:
+                print("Try adding to cluster")
+            for j,satellite_peak in peak_df.iterrows():
+                # print(f"j,satellite_peak: {j}")
+                if j in remaining_peaks:
+                    # check overlap
+                    # print(f"{j} in remaining peaks")
+                    smaller_peak,larger_peak = (satellite_peak,center_peak) if peakResLength(satellite_peak) <= peakResLength(center_peak) else (center_peak,satellite_peak)
+                    if clusterOverlap(smaller_peak,larger_peak) >= frac_overlap:
+                        if verbose:
+                            print(f"satellite_peak is overlapping: ({satellite_peak['cluster first residue']},{satellite_peak['cluster last residue']})")
+                        cluster_members.append(j)
+                        remaining_peaks.remove(j)
+                        if verbose:
+                            print(f"remove: {j}")
+                            print(f"remaining_peaks: {remaining_peaks}")
+            
+            # merge all the clusters and add to cluster_data
+            if verbose:
+                print(f"Will now merge {len(cluster_members)} cluster members")
+            cluster_data.append(mergeAllPeaks([peak_df.loc[x] for x in cluster_members]))
+    
+    print(f"After iterating over peak_df with {len(peak_df)} rows, there are {len(cluster_data)} clusters and {len(remaining_peaks)} peaks remain unclustered")
+    
+    return pd.DataFrame(cluster_data)
+    
+def clusterPeaksByOverlap(peak_df,
+                          group_vals=['gene','condition'],
+                          frac_overlap=0.7,
+                          verbose=False):
+
+    if 'cluster first residue' not in peak_df.columns:
+        peak_df['cluster first residue'] = peak_df['cluster first fragment center (aa)'] - (peak_df['fragment length (aa)']-1)/2
+    
+    if 'cluster last residue' not in peak_df.columns:
+        peak_df['cluster last residue'] = peak_df['cluster last fragment center (aa)'] + (peak_df['fragment length (aa)']-1)/2
+    cluster_df_list = []
+    print(f"Group predicted peaks by {group_vals}")
+    for group_variables,group_df in peak_df.groupby(group_vals):
+        print(f"Group predicted peaks by {group_variables}")
+        cluster_df_list.append(clusterPeaksByOverlapGroupedDF(group_df,frac_overlap,verbose))
+    cluster_df = pd.concat(cluster_df_list,ignore_index=True)
+    return cluster_df
