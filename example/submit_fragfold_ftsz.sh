@@ -16,17 +16,18 @@ conda_env_name=fragfold
 cuda_version=11.1
 
 # FASTA files that will be used to generate MSA
-query_seq=?
+query_seq=ftsZ.fasta 
 
 # MSA processing parameters
-fragment_a3m_name=?
-fullprotein_a3m_name=?
-fragment_ntermres_start=?
-fragment_ntermres_final=?
-fragment_length=?
-protein_ntermres=?
-protein_ctermres=?
-protein_copies=?
+fragment_a3m_name=ftsZ 
+fullprotein_a3m_name=ftsZ 
+fragment_ntermres_start=1
+# fragment_ntermres_final=353
+fragment_ntermres_final=10
+fragment_length=30
+protein_ntermres=10
+protein_ctermres=316
+protein_copies=1
 
 # Job array mode:
 array_mode=slurm_array #alternative: "llsub"
