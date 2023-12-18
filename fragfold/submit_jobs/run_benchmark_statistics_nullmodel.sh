@@ -6,7 +6,7 @@
 ##SBATCH --mem=8G
 ##SBATCH -o benchmark_statistics.%j.log
 
-CONDA_ENV=fragfold2
+CONDA_ENV=fragfold
 REPO=/home/gridsan/sswanson/swans/savinovCollaboration/FragFold
 
 #LLSUB_SIZE=48

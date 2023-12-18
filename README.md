@@ -83,19 +83,29 @@ First, create a `.json` file with paths to the output of the FragFold jobs.
 
 ```json
 {
-    "ftsZ-coding-EcoliBL21DE3":
+    "ftsZ-coding-EcoliBL21DE3": # the full-length protein name
         {
-        "30aa_monomer_ftsZ":
+        "30aa_monomer_ftsZ": # the name of the fragment + full-length protein screen
             {
-            "colabfold":"/path/to/output/" #REPLACE
+            "colabfold":"REPODIR/example" #replace with absolute path to directory where colabfold jobs were submitted
             }
         }
 }
 ```
 
-Copy the script to the directory, set the input variables, and then run.
+Copy the script to the directory, set the input variables, and then run `colabfold_process_output.py`
 
 ```bash
-cp ../fragfold/submit_jobs/run_colabfold_process_output.sh .
+
+cd example/processoutput
 sbatch run_colabfold_process_output.sh
+```
+
+### Downstream analysis
+
+Given the colabfold predictions, you can predict peaks by running `predict_alphafold_peaks.py`.
+
+```bash
+cd example/ftsZ_predictpeaks
+sbatch run_predict_alphafold_peaks.sh
 ```

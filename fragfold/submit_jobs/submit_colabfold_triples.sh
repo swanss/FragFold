@@ -18,7 +18,7 @@ echo "Submitting colabfold jobs..."
 readarray -t RUNLIST < $a3m_list_file
 RUNLIST_LEN=${#RUNLIST[@]}
 batch_size=$(( $(($RUNLIST_LEN/$LLSUB_SIZE)) +1 ))
-runfile=${repo_dir}/fragfold/submit_jobs/run_colabfold_triples.sh # the script that will be run for each element in the file
+runfile=${repo_dir}/fragfold/submit_jobs/run_colabfold.sh # the script that will be run for each element in the file
 
 # get the batch boundaries
 let start=$batch_size*$LLSUB_RANK
