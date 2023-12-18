@@ -1,3 +1,0 @@
-SEQUENCE: 
-SCORE: total_score dslf_fa13    fa_atr    fa_dun   fa_elec fa_intra_rep fa_intra_sol_xover4              fa_rep              fa_sol hbond_bb_sc hbond_lr_bb    hbond_sc hbond_sr_bb lk_ball_wtd       omega     p_aa_pp pro_close rama_prepro         ref yhh_planarity description 
-SCORE:    -987.445     0.000 -1865.529   314.905  -568.456        3.301              51.880             227.508            1094.969     -52.313     -80.316     -37.532    -132.647     -45.299      35.435     -69.883     1.339      -6.246     141.091         0.348 bsubtilis_ftsZ1copies_10-315_bsubtilis_ftsZ_354-383_unrelaxed_rank_4_model_1_0001
