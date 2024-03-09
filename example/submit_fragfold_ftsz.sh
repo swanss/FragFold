@@ -16,7 +16,8 @@ conda_env_name=fragfold
 cuda_version=11.1
 
 # FASTA files that will be used to generate MSA
-query_seq=ftsZ.fasta 
+query_seq=ftsZ.fasta
+a3m_dir_name=mmseqs2_a3m
 
 # MSA processing parameters
 fragment_a3m_name=ftsZ 
@@ -61,11 +62,11 @@ fi
 
 ### Create fragment + full-length MSAs
 if conda run --no-capture-output -n $conda_env_name python ${repo_dir}/fragfold/create_fragment_msa.py \
-    --fragment_a3m_input ${PWD}/mmseqs2_a3m/${fragment_a3m_name}.a3m \
+    --fragment_a3m_input ${PWD}/${a3m_dir_name}/${fragment_a3m_name}.a3m \
     --fragment_ntermres_start $fragment_ntermres_start \
     --fragment_ntermres_final $fragment_ntermres_final \
     --fragment_length $fragment_length \
-    --protein_a3m_input ${PWD}/mmseqs2_a3m/${fullprotein_a3m_name}.a3m \
+    --protein_a3m_input ${PWD}/${a3m_dir_name}/${fullprotein_a3m_name}.a3m \
     --protein_ntermres $protein_ntermres \
     --protein_ctermres $protein_ctermres \
     --protein_copies $protein_copies \
