@@ -17,7 +17,30 @@ doi: 10.6084/m9.figshare.24841269
 
 ### 1. Install local colabfold
 
-Follow the instructions at the local colabfold [repo](https://github.com/YoshitakaMo/localcolabfold) to install ColabFold on your system. We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed).
+The prediction of structures is done with ColabFold, specifically the local version. Follow the instructions in the [repo](https://github.com/YoshitakaMo/localcolabfold) to install ColabFold on your system. We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed). Note that CUDA 11.8 is required to use a GPU with ColabFold.
+
+I recommend that you log the output when installing so that you can verify that each step of the process completed successfully.
+
+```bash
+bash install_colabbatch_linux.sh | tee install_colabbatch_linux.log
+```
+
+Once the process has completed successfully, it's advisable to run a small test job to verify that it's working. The following example is taken from the localcolabfold README.
+
+**`example.fasta`**
+```
+>sp|P61823
+MALKSLVLLSLLVLVLLLVRVQPSLGKETAAAKFERQHMDSSTSAASSSNYCNQMMKSRN
+LTKDRCKPVNTFVHESLADVQAVCSQKNVACKNGQTNCYQSYSTMSITDCRETGSSKYPN
+CAYKTTQANKHIIVACEGNPYVPVHFDASV
+```
+
+```bash
+colabfold_batch example.fasta colabfold_batch_test
+```
+
+If you're running on a system with an nvidia gpu, the output should say `Running on GPU`, if you see that not GPU is detected, check if one is currently available with `nvidia-smi`. If you're still having issues, look back at the logs to check if the version of tensorflow that was installed is compatible with CUDA 11.8.
+
 
 ### 2. Install FragFold
 
@@ -26,10 +49,10 @@ Use the following commands to clone the repo and install FragFold and its depend
 ```bash
 git clone https://github.com/swanss/FragFold.git
 cd FragFold
-conda create -n fragfold python=3.7
-conda activate fragfold
-pip install .
+bash install_fragfold.sh
 ```
+
+You should see `installation complete` when it's done running, if not, there was an issue during one of steps.
 
 # Running FragFold
 

@@ -1,4 +1,5 @@
 from pathlib import Path
+from datetime import datetime
 import glob, json, argparse, os, sys, re, functools
 import string
 import multiprocessing as mp
@@ -12,6 +13,7 @@ from Bio.PDB import *
 
 from fragfold.src.colabfold_process_output_utils import *
 from fragfold.src.analyze_predictions import *
+from fragfold.src.plot_utils import *
 
 def getRankFromPath(path):
     pat = r"rank_(00)?(\d)"
@@ -192,6 +194,14 @@ def main(args):
         merge_df = concat_df.merge(exp_df,how='left',on=merge_on_list,validate='many_to_one')
         merge_df.to_csv("colabfold_predictions_expmerge.csv")
 
+    if args.generate_plots:
+        for gene,group_df in concat_df.groupby('gene'):
+            ax = plotRawValuesOnSingle(group_df)
+            plt.savefig(f"{datetime.today().strftime('%y%m%d')}_fragmentcenter_vs_weightedcontacts_combined_fragments-{gene}.png",
+                        dpi=300,bbox_inches='tight')
+            g = plotRawValuesOnFacetGrid(group_df)
+            plt.savefig(f"{datetime.today().strftime('%y%m%d')}_fragmentcenter_vs_weightedcontacts_facetgrid_fragments-{gene}.png",
+                        dpi=300,bbox_inches='tight')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -203,7 +213,8 @@ if __name__ == "__main__":
     #                     help='The number of processes that can be run concurrently (set this to the number of available CPU cores)')
     parser.add_argument('--contact_distance_cutoff',required=False,default=3.5,type=float,
                         help='The distance cutoff between heavy atoms of interface residues that defines a contact')
-
+    parser.add_argument('--generate_plots',action='store_true',
+                        help='If provided, will generate plots for each fragmented gene + condition')
     args = parser.parse_args()
     main(args)
 

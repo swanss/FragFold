@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import os
 import random
+from multiprocessing import Pool
 
 def readFastaLines(file):
     header = file.readline().rstrip()
@@ -213,16 +214,20 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
         dir_name.mkdir(parents=False,exist_ok=False)
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
-    
-    a3m_out_path_list = []
-    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2)):
-        fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
-        a3m_out_path = dir_name.joinpath(f"{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
-        abs_a3m_out_path = a3m_out_path.absolute()
-        print(f"Creating .a3m file: {abs_a3m_out_path}")
-        createMSA(a3m_path, protein_range, fragment_range, -1, abs_a3m_out_path, protein_copies)
-        a3m_out_path_list.append(str(abs_a3m_out_path))
+
+    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2))
+    with Pool() as p:
+        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragment_starmap,[(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
+
     return a3m_out_path_list
+
+def createIndividualMSAsFullLengthFragment_starmap(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range):
+    fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
+    a3m_out_path = dir_name.joinpath(f"{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
+    abs_a3m_out_path = a3m_out_path.absolute()
+    print(f"Creating .a3m file: {abs_a3m_out_path}")
+    createMSA(a3m_path, protein_range, fragment_range, -1, abs_a3m_out_path, protein_copies)
+    return abs_a3m_out_path
         
 def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
@@ -256,12 +261,25 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
     
-    a3m_out_path_list = []
-    for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2)):
-        fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
-        a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
-        abs_a3m_out_path = a3m_out_path.absolute()
-        print(f"Creating .a3m file: {abs_a3m_out_path}")
-        createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
-        a3m_out_path_list.append(str(abs_a3m_out_path))
+    # a3m_out_path_list = []
+    # for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2)):
+    #     fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
+    #     a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
+    #     abs_a3m_out_path = a3m_out_path.absolute()
+    #     print(f"Creating .a3m file: {abs_a3m_out_path}")
+    #     createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
+    #     a3m_out_path_list.append(str(abs_a3m_out_path))
+
+    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2))
+    with Pool() as p:
+        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragmentHeteromeric_starmap,[(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
+
     return a3m_out_path_list
+
+def createIndividualMSAsFullLengthFragmentHeteromeric_starmap(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range):
+    fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
+    a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
+    abs_a3m_out_path = a3m_out_path.absolute()
+    print(f"Creating .a3m file: {abs_a3m_out_path}")
+    createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
+    return abs_a3m_out_path
