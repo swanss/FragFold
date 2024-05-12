@@ -7,7 +7,7 @@ LLsub -i --time=1-00:00 --partition=xeon-p8
 Go to the local directory
 
 ```
-USER=$(whoami) && mkdir -p /state/partition1/user/$USER && cd /state/partition1/user/$USER
+USER=$(whoami) && mkdir -p /state/partition1/user/$USER && cd /state/partition1/user/$USER && conda activate fragfold
 ```
 
 Run the command
@@ -35,5 +35,15 @@ nextflow log $RUN_NAME -f name,status,workdir | tee nextflow_report.txt
 final command 
 
 ```
+conda activate fragfold
+NEXTFLOWDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow
+WORKDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/practice
 nextflow run ${NEXTFLOWDIR}/fragfold_example.nf -w $WORKDIR -resume
+```
+
+```
+conda activate fragfold
+NEXTFLOWDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow
+WORKDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/practice
+nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
 ```

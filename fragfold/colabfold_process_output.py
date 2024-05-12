@@ -9,7 +9,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 
-from Bio.PDB import *
+from Bio.PDB import PDBParser
 
 from fragfold.src.colabfold_process_output_utils import *
 from fragfold.src.analyze_predictions import *
@@ -75,8 +75,8 @@ def load_confidence_data(path):
 
 def get_confidence_dataframe(all_paths,n_workers=1):
 
-    if len(all_paths) <= 0:
-        raise ValueError(f"Unable to find colabfold output in the directory: {glob_path}")
+    if len(all_paths) == 0:
+        raise ValueError(f"Unable to find colabfold output in the directory: {all_paths}")
 
     if n_workers > 1:
         with mp.Pool(n_workers) as pool:
@@ -91,13 +91,11 @@ def get_confidence_dataframe(all_paths,n_workers=1):
     print(f"{len(all_paths)} total paths and {len(confidence_df)} lines in the dataframe")
     return confidence_df
 
-# pool.map only accepts a function and an iterable
-# since requires other fixed parameters, we bake those into the function using a decorator
-
-# def load_contact_data_decorator(protein_chains,fragment_chains,distance_cutoff):
-#     def load_contact_data_wrapped(path):
-#         return load_contact_data(path,protein_chains,fragment_chains,distance_cutoff)
-#     return load_contact_data_wrapped
+def get_chains_from_structure(path):
+    parser = PDBParser()
+    structure = parser.get_structure(Path(path).stem, path)
+    chain_id_list = [c.id for c in structure.get_chains()]
+    return chain_id_list
 
 def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
     name = path.split('_unrelaxed')[0]
@@ -110,58 +108,44 @@ def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
 
 def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
 
-    # if len(all_paths)==0:
-    #     raise ValueError("Did not find .pdb files")
+    if len(all_paths)==0:
+        raise ValueError("No pdb files were provided")
         
-    # # Use the .a3m info line to determine the number of chains/residue lengths (will be the same for each individual structure)
-    # a3m_path_list = glob.glob(os.path.join(os.path.dirname(all_paths[0]),'*.a3m'))
-    # assert len(a3m_path_list) > 0
-    # n_copies_list,_ = getChainInfoFromA3M(a3m_path_list[0])
-    # n_total_chains = np.sum(np.array([x for x in n_copies_list]))
-    # assert n_total_chains < len(string.ascii_uppercase), "ran out of chain names, are you sure there's not a bug?"
-    # protein_chains = set([chain_id for i,chain_id in enumerate(string.ascii_uppercase) if i < n_total_chains - 1])
-    # fragment_chains = set(string.ascii_uppercase[n_total_chains-1])
-    protein_chains = set('A')
-    fragment_chains = set('B')
+    # Assumptions: last chain is the fragment, preceding chain(s) are the protein
+    # Load the first structure to get names and exact lengths
+
+    chain_list = get_chains_from_structure(all_paths[0])
+    protein_chains = set(chain_list[:-1])
+    fragment_chain = set(chain_list[-1])
     
     if n_workers > 1:
+        # An alternative to starmap
         load_contact_data_mapper = functools.partial(load_contact_data,protein_chains=protein_chains,fragment_chains=fragment_chains,distance_cutoff=contact_distance_cutoff)
         with mp.Pool(n_workers) as pool:
             data = pool.map(func=load_contact_data_mapper,iterable=all_paths,chunksize=1)
     else:
         data = list()
         for path in all_paths:
-            data.append(load_contact_data(path,protein_chains,fragment_chains,distance_cutoff=contact_distance_cutoff))
+            data.append(load_contact_data(path,protein_chains,fragment_chain,distance_cutoff=contact_distance_cutoff))
 
     conts_df = pd.DataFrame(data,columns=['fragment name','rank','fragment start (aa)','fragment center (aa)','fragment end (aa)','n_contacts','path'])
     conts_df['protein_chains'] = ','.join(protein_chains)
-    conts_df['fragment_chain'] = ','.join(fragment_chains)
+    conts_df['fragment_chain'] = ','.join(fragment_chain)
     conts_df = conts_df.sort_values(by='fragment start (aa)')
     print(f"{len(all_paths)} total paths and {len(conts_df)} lines in the dataframe")
     return conts_df
 
 
 def main(args):
-    # # Load JSON file specifying where to import colabfold results from
-    # json_path = Path(args.import_json)
-    # assert json_path.is_file()
-    # print(f"Loading JSON file specifying where colabfold results are located: {json_path}")
-    # n_workers = mp.cpu_count() 
+
     n_workers = len(os.sched_getaffinity(0))
     contact_distance_cutoff = args.contact_distance_cutoff
     experimental_data_path = args.experimental_data
 
     print(f"Loading data with {n_workers} workers")
 
-    # with open(json_path,"r") as file:
-    #     colab_results = json.loads(file.read())
-
-    # For each gene and condition, import available data and create individual dataframes
     print('Processing results...')
-    df_list = []
     merge_on_list = ['fragment name','rank','fragment start (aa)','fragment center (aa)','fragment end (aa)']
-    fragment_protein_name = args.fragment_protein
-    full_protein_name = args.full_protein
 
     # Load confidence (pLDDT/iPTM)
     confidence_log_paths = args.confidence_logs
@@ -173,16 +157,13 @@ def main(args):
     print(predicted_pdb_paths)
     contacts_df = get_contact_dataframe(predicted_pdb_paths,contact_distance_cutoff,n_workers)
 
-    # TODO calculate RMSD
-
     # Merge dataframes into a single one containing all types of data
     comb_df = confidence_df.merge(contacts_df,on=merge_on_list,indicator=True,validate="one_to_one")
 
     # Calculate the weighted contacts
     comb_df['weighted_contacts'] = comb_df['n_contacts'] * comb_df['iptm']
-
-    comb_df['fragment_parent_name'] = fragment_protein_name
-    comb_df['protein_name'] = full_protein_name
+    comb_df['fragment_parent_name'] =  args.fragment_protein
+    comb_df['protein_name'] = args.full_protein
     comb_df['fragment length (aa)'] = comb_df['fragment end (aa)'] - comb_df['fragment start (aa)'] + 1
     print(f"Combined dataframe with {len(comb_df)} rows")
 
@@ -215,9 +196,9 @@ if __name__ == "__main__":
         prog = 'ColabFoldProcessOutput',
         description = 'Script for processing the output of colabfold jobs and combining into a single dataframe')
     parser.add_argument('--predicted_pdbs',nargs='+',required=True,
-                        help='List of paths to all of the PDBs predicted by ColabFold')
+                        help='The paths to the PDBs predicted by ColabFold')
     parser.add_argument('--confidence_logs',nargs='+',required=True,
-                        help='List of log.txt files from the ColabFold Predictions')
+                        help='The paths to the log.txt files from the ColabFold predictions')
     parser.add_argument('--full_protein',required=True)
     parser.add_argument('--fragment_protein',required=True)
     parser.add_argument('--experimental_data',required=False,default="")
