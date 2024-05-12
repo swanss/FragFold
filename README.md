@@ -82,7 +82,7 @@ Tips
 
 ### Creating process profiles
 
-Next you will need to edit the process profiles according to your HPC environment. 
+Next you will need to edit the process profiles (in `FragFold/nextflow/nextflow.config`) according to your HPC environment. 
 
 ```nextflow
 withLabel: cpu_network {
@@ -95,7 +95,7 @@ withLabel: cpu_network {
 }
 ```
 
-In this example, we define a process profile with the label "cpu_network". If you're using an HPC with SLURM, you will only need to change `queue` to a partition on your HPC (see all partitions with `sinfo`). Note that the nodes in this partition must have network access, as this is required for contacting the mmseqs server.
+In this example, we define a process profile with the label `cpu_network`. If you're using a HPC with SLURM, you will only need to change `queue` to a partition on your HPC (see all partitions with `sinfo`). Note that the nodes in the partition set for cpu_network must have network access, as this is required for contacting the mmseqs server.
 
 Repeat this for all of the profiles that are defined in the config file. Note that if you have nodes with different memory/cpu/time limits, you will need to adjust these values to match those.
 
@@ -132,7 +132,6 @@ nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
 After the job is completed you should see output like this:
 ```bash
 (fragfold3) sswanson@d-19-1-1:/state/partition1/user/sswanson$ nextflow run ${NEXTFLOWDIR}/fragfold_example_mini.nf -w $WORKDIR -resume
-curl: (7) Couldn't connect to server
 N E X T F L O W  ~  version 23.10.1
 Launching `/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/fragfold_example_mini.nf` [tiny_agnesi] DSL2 - revision: f2c61140f9
 executor >  slurm (1)
@@ -150,7 +149,7 @@ The final output csv (`*_colabfold_predictions.csv`) is copied to the working di
 
 Nextflow uses file locking to store task metadata and can only be run in a directory that has locking, this is not compatible with certain file system types, such as Lustre. To check what is available, use `findmnt`, the output will report the file system type for available directories and also describe whether it is available in the OPTIONS column (If you see `noflock`, then you know it is not supported).
 
-One workaround for this is to run *nextflow* on a file system that supports locking (e.g. a local filesystem) for task metadata storage but run the processes/and store the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (outputs are always stored in separate directories).
+One workaround for this is to run nextflow on a file system that supports locking (e.g. a local filesystem) for task metadata storage but run the processes/and store the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (as outputs are always stored in separate directories to avoid collisions).
 
 As an example, this is how we start nextflow on our HPC:
 ```bash
