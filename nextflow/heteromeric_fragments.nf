@@ -5,14 +5,14 @@ include {build_msa; build_msa as build_msa_fragparent; process_msa; colabfold; c
 nextflow.enable.dsl=2
 
 // Define parameters
-params.job_name = "test"
-params.protein_query_seq = "/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/example/ftsZ.fasta"
-params.fragment_query_seq = "/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/example/ftsZ.fasta"
-params.fragment_ntermres_start = 160
-params.fragment_ntermres_final = 170
-params.fragment_length = 30
-params.protein_nterm_res = 150
-params.protein_cterm_res = 200
+params.job_name = ""
+params.protein_query_seq = ""
+params.fragment_query_seq = ""
+params.fragment_ntermres_start = 
+params.fragment_ntermres_final = 
+params.fragment_length = 
+params.protein_nterm_res = 
+params.protein_cterm_res = 
 params.protein_copies = 1
 
 // Define workflow

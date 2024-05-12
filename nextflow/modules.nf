@@ -83,10 +83,10 @@ process create_summary_csv {
 
     shell:
     '''
-    python !{repo_dir}/fragfold/colabfold_process_output.py 
-        --predicted_pdbs !{pdb_file} 
-        --confidence_logs log_file_*.txt 
-        --full_protein !{protein_name}
+    python !{repo_dir}/fragfold/colabfold_process_output.py \
+        --predicted_pdbs !{pdb_file} \
+        --confidence_logs log_file_*.txt \
+        --full_protein !{protein_name} \
         --fragment_protein !{fragment_parent_name}
     '''
 }

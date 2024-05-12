@@ -105,12 +105,12 @@ Tips
 
 ### Setting job-specific variables
 
-Now we set the job-specific parameters that control FragFold execution. In order to run the example `FragFold/example/ftsZ_homomeric_fragments.nf`, you will only need to edit the path of the query sequence to match your system.
+Now we set the job-specific parameters that control FragFold execution. In order to run the example `FragFold/nextflow/ftsZ_homomeric_example.nf`, you will only need to edit the path of the query sequence to match your system.
 
 ```nextflow
 // Define parameters
 params.job_name = "ftsZ_test"
-params.query_seq = "path/to/repo/FragFold/example/ftsZ.fasta" // edit this path
+params.query_seq = "path/to/repo/FragFold/example/ftsZ.fasta" // edit this path according to your repo
 params.fragment_ntermres_start = 160
 params.fragment_ntermres_final = 170
 params.fragment_length = 30
@@ -121,19 +121,18 @@ params.protein_copies = 1
 
 ### Running nextflow.
 
-Run nextflow with the following command
-
+Run nextflow with the following command:
 ```bash
 NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow scripts
-WORKDIR=/home/gridsan/user/FragFold/nextflow/practice #directory where results will be stored
-nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
+WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be stored
+nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
 ```
 
 After the job is completed you should see output like this:
 ```bash
-(fragfold3) sswanson@d-19-1-1:/state/partition1/user/sswanson$ nextflow run ${NEXTFLOWDIR}/fragfold_example_mini.nf -w $WORKDIR -resume
+(fragfold) user@d-19-1-1:/state/partition1/user/user$ nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
 N E X T F L O W  ~  version 23.10.1
-Launching `/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/fragfold_example_mini.nf` [tiny_agnesi] DSL2 - revision: f2c61140f9
+Launching `/home/gridsan/user/keatinglab_shared/user/savinovCollaboration/FragFold/nextflow/ftsZ_homomeric_example.nf` [tiny_agnesi] DSL2 - revision: f2c61140f9
 executor >  slurm (1)
 [b5/8446c6] process > build_msa          [100%] 1 of 1 ✔
 [51/8c5e4b] process > process_msa        [100%] 1 of 1 ✔
@@ -156,8 +155,8 @@ As an example, this is how we start nextflow on our HPC:
 LLsub -i --time=1-00:00 --partition=xeon-p8
 USER=$(whoami) && mkdir -p /state/partition1/user/$USER && cd /state/partition1/user/$USER && conda activate fragfold
 NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow scripts
-WORKDIR=/home/gridsan/user/FragFold/nextflow/practice #directory where results will be stored
-nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
+WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be stored
+nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
 ```
 
 ### Submitting nextflow as a job for large colabfold jobs
