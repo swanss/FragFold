@@ -13,21 +13,25 @@ doi: 10.6084/m9.figshare.24841269
 
 # Installing FragFold
 
-## Overview of the steps
+## 1. Install local colabfold
 
-### 1. Install local colabfold
+The locally installable version of ColabFold is used to predict structures. Go to the [repo](https://github.com/YoshitakaMo/localcolabfold) and follow the instructions to install ColabFold on your system (this can take >1 hr). You can ignore the recommendation to edit your `~/.bashrc` to add local ColabFold to your PATH, this is handled by FragFold.
 
-The prediction of structures is done with ColabFold, specifically the local version. Follow the instructions in the [repo](https://github.com/YoshitakaMo/localcolabfold) to install ColabFold on your system. We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed). Note that CUDA 11.8 is required to use a GPU with ColabFold.
+We developed and tested FragFold on this specific [commit](https://github.com/YoshitakaMo/localcolabfold/tree/88d174ffa7a7bc76a644db14ba0099ceb0606aed). Note that CUDA 11.8 is required to use a GPU with ColabFold.
 
-I recommend that you log the output when installing so that you can verify that each step of the process completed successfully.
+Log the output while installing to verify that each step of the process completed successfully, this can be particularly helpful for debugging issues later on.
 
 ```bash
 bash install_colabbatch_linux.sh | tee install_colabbatch_linux.log
 ```
 
-Once the process has completed successfully, it's advisable to run a small test job to verify that it's working. The following example is taken from the localcolabfold README.
+Once installation has completed successfully, run a small test job to verify that it's working. The following example is taken from the localcolabfold README.
 
-**`example.fasta`**
+```bash
+/path/to/installation/colabfold_batch example.fasta colabfold_batch_test
+```
+
+Where **`example.fasta`** is a short amino acid sequence
 ```
 >sp|P61823
 MALKSLVLLSLLVLVLLLVRVQPSLGKETAAAKFERQHMDSSTSAASSSNYCNQMMKSRN
@@ -35,12 +39,7 @@ LTKDRCKPVNTFVHESLADVQAVCSQKNVACKNGQTNCYQSYSTMSITDCRETGSSKYPN
 CAYKTTQANKHIIVACEGNPYVPVHFDASV
 ```
 
-```bash
-colabfold_batch example.fasta colabfold_batch_test
-```
-
-If you're running on a system with an nvidia gpu, the output should say `Running on GPU`, if you see that not GPU is detected, check if one is currently available with `nvidia-smi`. If you're still having issues, look back at the logs to check if the version of tensorflow that was installed is compatible with CUDA 11.8.
-
+If you're running on a system with a NVIDIA gpu, look for `Running on GPU` in the output. If you see that not GPU is detected, check if one is currently available with `nvidia-smi`. If you're still having issues, look back at the logs to check if the version of tensorflow that was installed is compatible with CUDA 11.8.
 
 ### 2. Install FragFold
 
@@ -52,85 +51,119 @@ cd FragFold
 bash install_fragfold.sh
 ```
 
-You should see `installation complete` when it's done running, if not, there was an issue during one of steps.
+`install_fragfold.sh` uses conda to set up an environment containing FragFold as well as nextflow, the workflow system used to run jobs. The script should print `installation complete`, if not, there was an issue during one of steps.
 
 # Running FragFold
 
-To run the FragFold pipeline, you can submit a single bash script (`fragfold/submit_jobs/submit_fragfold.sh`) to run all the steps together. 
+FragFold uses [nextflow](https://www.nextflow.io/) to manage the execution of the pipeline. MSA building with MMseq2s, MSA processing/concatenation, ColabFold, and the analysis and aggregation are each defined as individual **processes** in `FragFold/nextflow/modules.nf` and then used to construct **workflows** for modeling homomeric or heteromeric interactions between fragments and full-length proteins, e.g. `FragFold/nextflow/heteromeric_fragments.nf`. The details of execution, such as whether a process should be run locally or submitted to a job queue in an HPC environment is controlled by the config file `FragFold/nextflow/nextflow.config`.
+
 
 ## FtsZ example
 
-### Running submit_fragfold.sh
+The following example demonstrates how to model homomeric interactions between full-length FtsZ (with slight truncations of the terminal residues) with 30aa fragments derived from the protein.
 
-Navigate to the example directory (`example`) and set the variables in `submit_fragfold_ftsz.sh`
+### Setting system-specific variables
 
-```bash
-# Environments and installation paths
-repo_dir=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold # path to the cloned repo
-colabfold_env_dir=~/localcolabfold/ # path to where localcolabfold was installed
-conda_env_name=fragfold # name of the conda environment
-cuda_version=11.1 
+Before running the pipeline, edit `FragFold/nextflow/nextflow.config`. First, set general parameters according to your install.
 
-# FASTA files that will be used to generate MSA
-query_seq=ftsZ.fasta # can be a single .fasta, or a directory containing many .fasta
-
-# MSA processing parameters
-fragment_a3m_name=ftsZ # should match the name of the fasta file from which fragments will be derived
-fullprotein_a3m_name=ftsZ # should match the name of fasta file from the full-length protein will be derived
-fragment_length=30 # the number of residues in each fragment
-fragment_ntermres_start=1 # the first residue of the first fragment
-fragment_ntermres_final=354 # the first residue of the last fragment (set this to ~10 for a quick test)
-protein_ntermres=10 # the first residue of the protein (generally 1)
-protein_ctermres=316 # the last residue of the protein 
-protein_copies=1
-
-# Job array mode:
-array_mode=slurm_array #alternative for supercloud: "llsub"
-
-# LLsub job submission (these do not matter if running in slurm_array mode)
-n_nodes=4
-n_gpu=2
-n_threads=1
+```nextflow
+// Define system-specific variables for all processes
+executor.queueSize = 50
+executor.conda = '/home/user/mambaforge/envs/fragfold'
+env.repo_dir = '/home/gridsan/user/FragFold'
+env.colabfold_dir = '/home/gridsan/user/localcolabfold/colabfold-conda'
+env.alphafold_params_dir = '/home/gridsan/user/localcolabfold/colabfold'
 ```
 
-If you're working on a cluster where the compute nodes have internet access, run `submit_fragfold.sh` after copying/editing the file with your arguments.
+Tips
+- You can get the location of your FragFold conda install with `conda info --envs`
+- `colabfold_dir` will be determined based on where you ran the install
+- `alphafold_params_dir` can be found with the colabfold directory
 
-```bash
-cd /FragFold/example
-sbatch submit_fragfold_ftsz.sh 
-```
+### Creating process profiles
 
-Otherwise, you will need to run the MSA generation stage separately in an environment with internet access (e.g. on the login node). After the MSAs are ready, the mmseqs step will be bypassed when running the bash script. Note that if you change the fasta files you will need to rerun the mmseqs script.
+Next you will need to edit the process profiles according to your HPC environment. 
 
-```bash
-cd /FragFold/example
-cp ../fragfold/submit_jobs/submit_mmseqs2.sh .
-bash submit_mmseqs2.sh
-sbatch submit_fragfold_ftsz.sh 
-```
-
-### Process output
-
-First, create a `.json` file with paths to the output of the FragFold jobs.
-
-```json
-{
-    "ftsZ-coding-EcoliBL21DE3": # the full-length protein name
-        {
-        "30aa_monomer_ftsZ": # the name of the fragment + full-length protein screen
-            {
-            "colabfold":"REPODIR/example" #replace with absolute path to directory where colabfold jobs were submitted
-            }
-        }
+```nextflow
+withLabel: cpu_network {
+    executor = 'slurm'
+    time = '1h'
+    cpus = 1
+    memory = '4 GB'
+    queue = 'download' // edit this value
+    clusterOptions = '--ntasks-per-node=1'
 }
 ```
 
-Copy the script to the directory, set the input variables, and then run `colabfold_process_output.py`
+In this example, we define a process profile with the label "cpu_network". If you're using an HPC with SLURM, you will only need to change `queue` to a partition on your HPC (see all partitions with `sinfo`). Note that the nodes in this partition must have network access, as this is required for contacting the mmseqs server.
+
+Repeat this for all of the profiles that are defined in the config file. Note that if you have nodes with different memory/cpu/time limits, you will need to adjust these values to match those.
+
+Tips
+- If you'd like to run all steps locally, go to `FragFold/nextflow/modules.nf` and replace the labels for each process with `'standard'`
+- If your cluster uses a different resource manager, check the nextflow executor [docs](https://www.nextflow.io/docs/latest/executor.html) to see if it is supported and edit the profiles accordingly.
+
+### Setting job-specific variables
+
+Now we set the job-specific parameters that control FragFold execution. In order to run the example `FragFold/example/ftsZ_homomeric_fragments.nf`, you will only need to edit the path of the query sequence to match your system.
+
+```nextflow
+// Define parameters
+params.job_name = "ftsZ_test"
+params.query_seq = "path/to/repo/FragFold/example/ftsZ.fasta" // edit this path
+params.fragment_ntermres_start = 160
+params.fragment_ntermres_final = 170
+params.fragment_length = 30
+params.protein_nterm_res = 150
+params.protein_cterm_res = 200
+params.protein_copies = 1
+```
+
+### Running nextflow.
+
+Run nextflow with the following command
 
 ```bash
-cd example/processoutput
-sbatch run_colabfold_process_output.sh
+NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow scripts
+WORKDIR=/home/gridsan/user/FragFold/nextflow/practice #directory where results will be stored
+nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
 ```
+
+After the job is completed you should see output like this:
+```bash
+(fragfold3) sswanson@d-19-1-1:/state/partition1/user/sswanson$ nextflow run ${NEXTFLOWDIR}/fragfold_example_mini.nf -w $WORKDIR -resume
+curl: (7) Couldn't connect to server
+N E X T F L O W  ~  version 23.10.1
+Launching `/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/fragfold_example_mini.nf` [tiny_agnesi] DSL2 - revision: f2c61140f9
+executor >  slurm (1)
+[b5/8446c6] process > build_msa          [100%] 1 of 1 ✔
+[51/8c5e4b] process > process_msa        [100%] 1 of 1 ✔
+[66/32bf2a] process > colabfold (5)      [100%] 11 of 11 ✔
+[89/a44267] process > create_summary_csv [100%] 1 of 1 ✔
+```
+
+To inspect the output of intermediate steps, use the names of the processes to find the directory. For example to find output from colabfold, go to `/home/gridsan/user/FragFold/nextflow/practice/66/32bf2a*`.
+
+The final output csv (`*_colabfold_predictions.csv`) is copied to the working directory where the nextflow job was submitted.
+
+### A note on file systems and NextFlow compatibility
+
+Nextflow uses file locking to store task metadata and can only be run in a directory that has locking, this is not compatible with certain file system types, such as Lustre. To check what is available, use `findmnt`, the output will report the file system type for available directories and also describe whether it is available in the OPTIONS column (If you see `noflock`, then you know it is not supported).
+
+One workaround for this is to run *nextflow* on a file system that supports locking (e.g. a local filesystem) for task metadata storage but run the processes/and store the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (outputs are always stored in separate directories).
+
+As an example, this is how we start nextflow on our HPC:
+```bash
+LLsub -i --time=1-00:00 --partition=xeon-p8
+USER=$(whoami) && mkdir -p /state/partition1/user/$USER && cd /state/partition1/user/$USER && conda activate fragfold
+NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow scripts
+WORKDIR=/home/gridsan/user/FragFold/nextflow/practice #directory where results will be stored
+nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
+```
+
+### Submitting nextflow as a job for large colabfold jobs
+
+For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. See the example script: `TODO`
 
 ### Downstream analysis
 

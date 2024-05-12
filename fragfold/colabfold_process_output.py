@@ -120,7 +120,7 @@ def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
     
     if n_workers > 1:
         # An alternative to starmap
-        load_contact_data_mapper = functools.partial(load_contact_data,protein_chains=protein_chains,fragment_chains=fragment_chains,distance_cutoff=contact_distance_cutoff)
+        load_contact_data_mapper = functools.partial(load_contact_data,protein_chains=protein_chains,fragment_chains=fragment_chain,distance_cutoff=contact_distance_cutoff)
         with mp.Pool(n_workers) as pool:
             data = pool.map(func=load_contact_data_mapper,iterable=all_paths,chunksize=1)
     else:

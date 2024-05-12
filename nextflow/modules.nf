@@ -49,7 +49,7 @@ process process_msa {
 }
 
 process colabfold {
-    label 'cpu'
+    label 'gpu'
 
     input:
         path a3m_concat
