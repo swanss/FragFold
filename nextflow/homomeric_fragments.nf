@@ -1,5 +1,5 @@
 // Import processes from module
-include {build_msa, process_msa, colabfold, create_summary_csv} from './modules'
+include {build_msa; process_msa; colabfold; create_summary_csv} from './modules'
 
 // Declare syntax version
 nextflow.enable.dsl=2
@@ -31,5 +31,6 @@ workflow {
     create_summary_csv(colabfold.out.log | collect ,
                        colabfold.out.pdb | collect , 
                        protein_name,
-                       protein_name)
+                       protein_name,
+                       params.job_name)
 }

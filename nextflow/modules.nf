@@ -70,13 +70,14 @@ process colabfold {
 
 process create_summary_csv {
     label 'cpu'
-    publishDir '.', saveAs: { csv -> "$csv" } 
+    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
 
     input:
         path 'log_file_*.txt'
         path pdb_file
         val protein_name
         val fragment_parent_name
+        val output_name
 
     output:
         path '*.csv'

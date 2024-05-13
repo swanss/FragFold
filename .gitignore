@@ -5,6 +5,7 @@ nextflow/practice
 nextflow/practice_scripts
 example*
 test*
+data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

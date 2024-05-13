@@ -1,12 +1,12 @@
 // Import processes from module
-include {build_msa, process_msa, colabfold, create_summary_csv} from './modules'
+include {build_msa; process_msa; colabfold; create_summary_csv} from './modules.nf'
 
 // Declare syntax version
-nextflow.enable.dsl=2
+nextflow.enable.dsl = 2
 
 // Define parameters
 params.job_name = "ftsZ_test"
-params.query_seq = "/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/example/ftsZ.fasta"
+params.protein_query_seq = "/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/example/ftsZ.fasta"
 params.fragment_ntermres_start = 160
 params.fragment_ntermres_final = 170
 params.fragment_length = 30
@@ -31,5 +31,6 @@ workflow {
     create_summary_csv(colabfold.out.log | collect ,
                        colabfold.out.pdb | collect , 
                        protein_name,
-                       protein_name)
+                       protein_name,
+                       params.job_name)
 }

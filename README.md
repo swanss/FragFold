@@ -146,9 +146,9 @@ The final output csv (`*_colabfold_predictions.csv`) is copied to the working di
 
 ### A note on file systems and NextFlow compatibility
 
-Nextflow uses file locking to store task metadata and can only be run in a directory that has locking, this is not compatible with certain file system types, such as Lustre. To check what is available, use `findmnt`, the output will report the file system type for available directories and also describe whether it is available in the OPTIONS column (If you see `noflock`, then you know it is not supported).
+Nextflow uses file locking to store task metadata and can only be run in a directory that has locking. This is not compatible with certain file system types, such as Lustre. To check what file systems are available on your system, use `findmnt`, the output will report the file system type for available directories and also describe whether it is available in the OPTIONS column (If you see `noflock`, then you know that locking is not supported).
 
-One workaround for this is to run nextflow on a file system that supports locking (e.g. a local filesystem) for task metadata storage but run the processes/and store the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (as outputs are always stored in separate directories to avoid collisions).
+One workaround for this is to run nextflow on a file system that supports locking (e.g. a local filesystem) for task metadata storage while running the processes/and storing the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (as outputs are always stored in separate directories to avoid collisions). To do this, simply run the nextflow command in a directory with locking and add the `-w` argument to specify the working directory.
 
 As an example, this is how we start nextflow on our HPC:
 ```bash

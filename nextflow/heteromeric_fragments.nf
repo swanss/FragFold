@@ -35,5 +35,6 @@ workflow {
     create_summary_csv(colabfold.out.log | collect , 
                        colabfold.out.pdb | collect ,
                        protein_name,
-                       fragment_parent_name)
+                       fragment_parent_name,
+                       params.job_name)
 }
