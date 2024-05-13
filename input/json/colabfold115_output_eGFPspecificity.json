@@ -1,0 +1,37 @@
+{
+    "EGFP-coding-pEGFP":
+        {
+        "30aa_monomer_ftsZ":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/egfp/data/230613_colabfold115_eGFP_ftsZ"
+            },
+        "30aa_monomer_eGFP":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/egfp/data/230801_colabfold115_eGFP_eGFP"
+            },
+        "30aa_monomer_groL":
+            {
+            "colabfold":""
+            },
+        "30aa_monomer_gyrA":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/egfp/data/230803_colabfold115_eGFP_gyrA"
+            },
+        "30aa_monomer_gyrB":
+            {
+            "colabfold":""
+            },
+        "30aa_monomer_lptF":
+            {
+            "colabfold":""
+            },
+        "30aa_monomer_rplJ":
+            {
+            "colabfold":""
+            },
+        "30aa_monomer_ssB":
+            {
+            "colabfold":""
+            }
+        }
+}

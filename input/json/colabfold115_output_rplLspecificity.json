@@ -1,0 +1,29 @@
+{
+    "rplL-coding-EcoliBL21DE3":
+        {
+        "30aa_monomer_ftsZ":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_ftsZ"
+            },
+        "30aa_monomer_groL":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_groEL"
+            },
+        "30aa_monomer_gyrA":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_gyrA"
+            },
+        "30aa_monomer_lptF":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_lptF"
+            },
+        "30aa_monomer_rplJ":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_rplJ"
+            },
+        "30aa_monomer_ssB":
+            {
+            "colabfold":"/data1/groups/keatinglab/swans/savinovCollaboration/rplL_specificity/240309_colabfold115_rplL_ssb"
+            }
+        }
+}

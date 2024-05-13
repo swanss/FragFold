@@ -40,7 +40,7 @@ def main(args):
                                                                         protein_copies)
     with open("a3m_list.txt","w") as file:
         for path in msa_path_list:
-            file.write(path+"\n")
+            file.write(str(path)+"\n")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(

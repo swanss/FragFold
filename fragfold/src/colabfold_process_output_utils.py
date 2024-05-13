@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from Bio.PDB import *
 
 # The following functions are specific to processing colabfold output
-
 def getChainInfoFromA3M(a3m_path):
     with open(a3m_path,'r') as file:
         chain_info_line = file.readline().rstrip()[1:] #strip trailing \n and preceding #

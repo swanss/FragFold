@@ -20,7 +20,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from fragfold.src.analyze_predictions import *
-from fragfold.src.peak_prediction import filterAlphaFoldPredictions,splitDiscontinuousFragmentSets,clusterOverlappingFragments,organizeClusters,plotClusters
+from fragfold.src.peak_prediction import filterAlphaFoldPredictions,splitDiscontinuousFragmentSets,clusterOverlappingFragments,organizeClusters,plotClusters,clusterPeaksByOverlap
 
 def loadParamsSetFromJSON(path,verbose=True):
     # Define parameter ranges
@@ -123,6 +123,12 @@ def singleParamSet(args):
     comb_df = clusterWithParams((args.n_contacts,args.n_weighted_contacts,args.iptm,args.contact_distance),pred_df,outdir)
     comb_df.to_csv(f"predictalphafoldpeaks_{name}.csv")
 
+    if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
+        print("Merging overlapping peaks...")
+        clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+        print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
+        clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
+
 def paramScan(args):
     print("Parameter scan")
 
@@ -169,6 +175,12 @@ def paramScan(args):
     if (len(df_list)>0):
         comb_df = pd.concat(df_list)
         comb_df.to_csv(f"predictalphafoldpeaks_paramscan_batch{args.batch_id}.csv")
+
+    if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
+        print("Merging overlapping peaks...")
+        clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+        print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
+        clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_paramscan_batch{args.batch_id}.csv")
 
     n_peak_list = list()
     for df in df_list:
@@ -229,7 +241,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         prog = 'predictAlphaFoldPeaks',
-        description = 'Script for predicting inhibitory fragments using AlphaFold. The parameters used for filtering fragments and clustering are defined in the JSON file')
+        description = 'Script for predicting inhibitory fragments using AlphaFold. The parameters used for filtering fragments and clustering are defined in the JSON file. Includes options for parallelizing, which are useful if performing a parameter scan.')
     parser.add_argument('--n_batches',type=int,default=1)
     parser.add_argument('--batch_id',type=int,default=0)
     parser.add_argument('--n_processes',type=int,default=1)
@@ -239,6 +251,7 @@ if __name__ == "__main__":
     parser.add_argument('--contact_distance',type=float)
     parser.add_argument('--paramscan_json',type=str)
     parser.add_argument('--colabfold_data_csv',type=str)
+    parser.add_argument('--cluster_peaks_frac_overlap',type=float,default=1.0)
     parser.add_argument('--verbose',action='store_true')
 
     args = parser.parse_args()
