@@ -45,5 +45,5 @@ nextflow run ${NEXTFLOWDIR}/fragfold_example.nf -w $WORKDIR -resume
 conda activate fragfold
 NEXTFLOWDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow
 WORKDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/practice
-nextflow run ${NEXTFLOWDIR}/heteromeric_fragments.nf -w $WORKDIR -resume
+nextflow run ${NEXTFLOWDIR}/fragfold.nf -w $WORKDIR -resume -params-file $NEXTFLOWDIR/params/ftsZ_monomeric_example.yaml
 ```

@@ -1,0 +1,9 @@
+job_name: ftsZ_test
+heteromeric_mode: false
+protein_query_seq: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/gene_fasta/ftsZ_A0A140NFM6.fasta
+fragment_ntermres_start: 160
+fragment_ntermres_final: 162
+fragment_length: 30
+protein_nterm_res: 150
+protein_cterm_res: 200
+protein_copies: 1
