@@ -118,6 +118,7 @@ def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
     start,end = name.split('_')[-1].split('-')
     start,end = int(start),int(end)
     center = (start + end) / 2
+    path = Path(path).resolve()
     return name,pred_rank,start,center,end,n_conts,path
 
 def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):

@@ -14,5 +14,11 @@ workflow {
         params.json_file,
         params.experimental_data,
         params.job_name)
-    predict_peaks(create_summary_csv_fromjson.out.csv,params.job_name)
+    predict_peaks(create_summary_csv_fromjson.out.csv,
+            params.job_name,
+            params.n_contacts,
+            params.n_weighted_contacts,
+            params.iptm,
+            params.contact_distance,
+            params.cluster_peaks_frac_overlap)
 }

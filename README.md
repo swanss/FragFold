@@ -117,6 +117,12 @@ params.fragment_length = 30
 params.protein_nterm_res = 150
 params.protein_cterm_res = 200
 params.protein_copies = 1
+experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv
+n_contacts: 3
+n_weighted_contacts: 3
+iptm: 0.3
+contact_distance: 0.4
+cluster_peaks_frac_overlap: 0.7
 ```
 
 ### Running nextflow.
@@ -164,4 +170,4 @@ nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR
 
 ### Submitting nextflow as a job for large colabfold jobs
 
-For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports resume by copying the task metadata files. To get it running your HPC, you will need to edit the slurm directives and paths.
+For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports `-resume` by copying the task metadata files. To get it running your HPC, you will need to edit the slurm directives and paths.

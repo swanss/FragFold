@@ -111,7 +111,7 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
         info_line = fragment_input_file.readline().rstrip()
         if not info_line.startswith('#'):
             raise ValueError(f"{fragmentProteinMSA} should begin with #, instead saw'+info_line")
-            
+
         # First line in the full-length msa is whole protein sequence
         fulllength_header,whole_sequence = readFastaLines(fulllength_input_file)
         query_protein_sequence = extractSubsequence(whole_sequence,protein_range)
@@ -164,11 +164,21 @@ def createMSAHeteromicInteraction(fullLengthProteinMSA: str, protein_range: tupl
 def readA3MProteinLength(a3m_path):
     with open(a3m_path,'r') as file:
         first_line = file.readline()
-    nResStr = first_line.split()[0]
-    if nResStr[0] != "#":
+    if first_line[0] != "#":
         raise ValueError(f"the first line of .a3m file: {a3m_path} should begin with '#'")
-    nRes = int(nResStr[1:])
+    nRes = int(first_line[1:].split('\t')[0])
     return nRes
+
+def replaceNullProteinRange(protein_length,start,stop):
+    # If necessary, define ranges from the provided sequences
+    start = start if start != -1 else 1
+    stop = stop if stop != -1 else protein_length
+    return (start,stop)
+
+def replaceNullFragmentRange(protein_length,fragment_length,start,stop):
+    start = start if start != -1 else 1
+    stop = stop if stop != -1 else protein_length - fragment_length + 1
+    return (start,stop)
 
 def verifyFragmentNterminalResRange(fragment_start_range,fragment_length,protein_n_res):
     if (len(fragment_start_range) != 2) or \
@@ -206,6 +216,8 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
 
     # verify residue selections
     protein_n_res = readA3MProteinLength(a3m_path)
+    protein_range = replaceNullProteinRange(protein_n_res,protein_range[0],protein_range[1])
+    fragment_start_range = replaceNullFragmentRange(protein_n_res,fragment_length,fragment_start_range[0],fragment_start_range[1])
     verifyFragmentNterminalResRange(fragment_start_range,fragment_length,protein_n_res)
     verifyProteinRange(protein_range,protein_n_res)
 
@@ -252,6 +264,8 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
     # verify residue selections
     fulllengthprotein_n_res = readA3MProteinLength(fulllength_a3m_path)
     fragmentprotein_n_res = readA3MProteinLength(fragment_a3m_path)
+    protein_range = replaceNullProteinRange(fulllengthprotein_n_res,protein_range[0],protein_range[1])
+    fragment_start_range = replaceNullFragmentRange(fragmentprotein_n_res,fragment_length,fragment_start_range[0],fragment_start_range[1])
     verifyFragmentNterminalResRange(fragment_start_range,fragment_length,fragmentprotein_n_res)
     verifyProteinRange(protein_range,fulllengthprotein_n_res)
 
@@ -260,15 +274,6 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
         dir_name.mkdir(parents=False,exist_ok=False)
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
-    
-    # a3m_out_path_list = []
-    # for fragment_start in range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2)):
-    #     fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
-    #     a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
-    #     abs_a3m_out_path = a3m_out_path.absolute()
-    #     print(f"Creating .a3m file: {abs_a3m_out_path}")
-    #     createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
-    #     a3m_out_path_list.append(str(abs_a3m_out_path))
 
     fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2))
     with Pool() as p:

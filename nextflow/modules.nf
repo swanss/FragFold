@@ -129,19 +129,24 @@ process predict_peaks {
     input:
         path csv
         val output_name
+        val n_contacts
+        val n_weighted_contacts
+        val iptm
+        val contact_distance
+        val cluster_peaks_frac_overlap
 
     output:
-        path '*.csv'
+        path '*.csv', optional: true
 
     shell:
     '''
     python !{repo_dir}/fragfold/predict_alphafold_peaks.py \
         --colabfold_data_csv !{csv} \
-        --n_contacts 3 \
-        --n_weighted_contacts 3 \
-        --iptm 0.3 \
-        --contact_distance 0.4 \
-        --cluster_peaks_frac_overlap 0.7 \
+        --n_contacts !{n_contacts} \
+        --n_weighted_contacts !{n_weighted_contacts} \
+        --iptm !{iptm} \
+        --contact_distance !{contact_distance} \
+        --cluster_peaks_frac_overlap !{cluster_peaks_frac_overlap} \
         --verbose
     '''
 }

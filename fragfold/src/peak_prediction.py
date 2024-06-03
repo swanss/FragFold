@@ -182,7 +182,8 @@ def pairwise(iterable):
 
 def splitDiscontinuousFragmentSets(pred_df: pd.DataFrame, verbose = True):
     df_list = []
-    assert pred_df.fragment_parent_name.nunique() == pred_df.protein_name.nunique() == pred_df.description.nunique() == pred_df['fragment_length_aa'].nunique() == 1, "Did not properly group prior to calling function"
+    assert pred_df.fragment_parent_name.nunique() == pred_df.protein_name.nunique() == pred_df.fragment_length_aa.nunique() == 1, "Did not properly group prior to calling function"
+    assert pred_df.description.nunique() == 0 or pred_df.description.nunique() == 1, "Did not properly group prior to calling function"
     fragment_len = pred_df['fragment_length_aa'].unique()[0]
 
     # find boundaries between fragments (e.g. positions that share no residues) and group fragments between these boundaries
@@ -668,7 +669,7 @@ def clusterPeaksByOverlapGroupedDF(peak_df,
     assert peak_df.protein_name.nunique() == 1
     assert peak_df.fragment_parent_name.nunique() == 1
     assert peak_df.fragment_length_aa.nunique() == 1
-    assert peak_df.description.nunique() == 1
+    assert peak_df.description.nunique() == 1 or  peak_df.description.nunique() == 0
     
     # n_res_overlap = math.ceil(frac_overlap*peak_df['fragment_length_aa'].unique())
     
@@ -734,7 +735,7 @@ def clusterPeaksByOverlap(peak_df,
         peak_df['cluster last residue'] = peak_df['cluster last fragment_center_aa'] + (peak_df['fragment_length_aa']-1)/2
     cluster_df_list = []
     print(f"Group predicted peaks by {group_vals}")
-    for group_variables,group_df in peak_df.groupby(group_vals):
+    for group_variables,group_df in peak_df.groupby(group_vals,dropna=False):
         print(f"Group predicted peaks by {group_variables}")
         cluster_df_list.append(clusterPeaksByOverlapGroupedDF(group_df,frac_overlap,verbose))
     cluster_df = pd.concat(cluster_df_list,ignore_index=True)
