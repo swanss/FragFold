@@ -7,9 +7,9 @@ The following functions plot generic fragment-specific values as a function of p
 '''
 
 def plotRawValuesOnSingle(df:pd.DataFrame,
-                  x='fragment center (aa)',
+                  x='fragment_center_aa',
                   y='weighted_contacts',
-                  hue='condition',
+                  hue='protein_name',
                   max_only=False):
     '''Plot fragment values together on the same axes
     '''
@@ -17,15 +17,15 @@ def plotRawValuesOnSingle(df:pd.DataFrame,
         df = df.iloc[df.groupby([hue,x])[y].idxmax()]
     aspect_ratio = (2 / 350) * (df[x].max() - df[x].min()) #based on FtsZ
     plt.figure(figsize=(5*aspect_ratio,5))
-    ax = sns.lineplot(data=df,x='fragment center (aa)',y='weighted_contacts',hue='condition')
+    ax = sns.lineplot(data=df,x=x,y=y,hue=hue)
     ymax = max(10,df[y].max())+5
     ax.set_ylim(0,ymax)
     return ax
     
 def plotRawValuesOnFacetGrid(df:pd.DataFrame,
-                  x='fragment center (aa)',
+                  x='fragment_center_aa',
                   y='weighted_contacts',
-                  row='condition',
+                  row='protein_name',
                   max_only=False):
     '''Plot fragment values separately, but share the x-axis
     '''
@@ -40,7 +40,7 @@ def plotRawValuesOnFacetGrid(df:pd.DataFrame,
     conditions = df[row].unique()
     for i in range(g.axes.shape[0]):
         condition = conditions[i]
-        assert 'condition = ' + condition == g.axes[i,0].title.get_text()
+        assert f'{row} = ' + condition == g.axes[i,0].title.get_text()
         ymax = max(10,df[df[row]==condition][y].max())+5
         g.axes[i,0].set_ylim(0,ymax)
     return g

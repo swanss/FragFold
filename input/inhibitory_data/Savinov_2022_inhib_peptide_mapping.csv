@@ -1,4 +1,4 @@
-gene,fragment ID,fragment start (aa),fragment end (aa),fragment center (aa),fragment length (aa),E = inhibitory effect (enrichment),sem(E),hydrophobicity_KyteDoolittle_classifier,instabIndex_Guruprasad_classifier,charge_Lehninger_classifier,frag_contains_alphaHelix,frag_contains_betaStrand,frag_contains_Turn,frag_centroid_fractional_position_classifier
+fragment_parent_name,fragment_id,fragment_start_aa,fragment_end_aa,fragment_center_aa,fragment_length_aa,inhibitory_effect_enrichment,sem,hydrophobicity_KyteDoolittle_classifier,instabIndex_Guruprasad_classifier,charge_Lehninger_classifier,frag_contains_alphaHelix,frag_contains_betaStrand,frag_contains_Turn,frag_centroid_fractional_position_classifier
 EGFP-coding-pEGFP,EGFP-coding-pEGFP_16_45_+,6,15,10.5,10,0.277702308,0.03832735,hydrophobic,unstable,negative,1,1,0,N-terminal
 EGFP-coding-pEGFP,EGFP-coding-pEGFP_16_90_+,6,30,18,25,-0.417512316,0.105113317,hydrophobic,stable,negative,1,1,0,N-terminal
 EGFP-coding-pEGFP,EGFP-coding-pEGFP_16_165_+,6,55,30.5,50,-0.461539648,0.310617384,hydrophobic,stable,negative,1,1,0,N-terminal

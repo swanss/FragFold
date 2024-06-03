@@ -24,9 +24,9 @@ def peakFindingFromExpData(exp_df: pd.DataFrame,
                            max_gap_distance: int = 5) -> pd.DataFrame:
     
     # Order fragments by their position in the gene and create "dummy fragments" if any are missing
-    min_fragment_start = exp_df['fragment start (aa)'].min()
-    max_fragment_start = exp_df['fragment start (aa)'].max()
-    fragstart_exp_df = exp_df.set_index('fragment start (aa)')
+    min_fragment_start = exp_df['fragment_start_aa'].min()
+    max_fragment_start = exp_df['fragment_start_aa'].max()
+    fragstart_exp_df = exp_df.set_index('fragment_start_aa')
     
     fragment_data = []
     n_missing_fragments = 0
@@ -35,7 +35,7 @@ def peakFindingFromExpData(exp_df: pd.DataFrame,
         if fragment_start in fragstart_exp_df.index:
             row = fragstart_exp_df.loc[fragment_start]
             fragment_data.append(row[exp_val_name])
-            idx2fragmentcenter[i] = row['fragment center (aa)']
+            idx2fragmentcenter[i] = row['fragment_center_aa']
         else:
             # missing fragment
             fragment_data.append(np.nan)
@@ -46,11 +46,11 @@ def peakFindingFromExpData(exp_df: pd.DataFrame,
                 
     peak_df,peak_score_list = peakFindingAlgorithm(data=fragment_data,peak_score_type='absolute',lookaround_distance=lookaround_distance,grouping_distance=grouping_distance,max_gap_distance=max_gap_distance,val_cutoff=exp_val_threshold)
     
-    peak_df['fragment center (aa)'] = peak_df['peak_fragment_idx'].apply(lambda x: idx2fragmentcenter[x])
-    peak_df['peak region first fragment center (aa)'] = peak_df['peak_region_first_idx'].apply(lambda x: idx2fragmentcenter[x])
-    peak_df['peak region last fragment center (aa)'] = peak_df['peak_region_last_idx'].apply(lambda x: idx2fragmentcenter[x])
+    peak_df['fragment_center_aa'] = peak_df['peak_fragment_idx'].apply(lambda x: idx2fragmentcenter[x])
+    peak_df['peak region first fragment_center_aa'] = peak_df['peak_region_first_idx'].apply(lambda x: idx2fragmentcenter[x])
+    peak_df['peak region last fragment_center_aa'] = peak_df['peak_region_last_idx'].apply(lambda x: idx2fragmentcenter[x])
 
-    peak_df = peak_df[['fragment center (aa)','peak region first fragment center (aa)','peak region last fragment center (aa)','peak_fragment_score']].merge(exp_df,on='fragment center (aa)')
+    peak_df = peak_df[['fragment_center_aa','peak region first fragment_center_aa','peak region last fragment_center_aa','peak_fragment_score']].merge(exp_df,on='fragment_center_aa')
     
     return peak_df,peak_score_list
 
@@ -182,22 +182,22 @@ def pairwise(iterable):
 
 def splitDiscontinuousFragmentSets(pred_df: pd.DataFrame, verbose = True):
     df_list = []
-    assert pred_df.gene.nunique() == pred_df.condition.nunique() == pred_df['fragment length (aa)'].nunique() == 1,f"{pred_df.gene.nunique()},{pred_df.condition.nunique(),pred_df['fragment length (aa)'].nunique()}"
-    fragment_len = pred_df['fragment length (aa)'].unique()[0]
+    assert pred_df.fragment_parent_name.nunique() == pred_df.protein_name.nunique() == pred_df.description.nunique() == pred_df['fragment_length_aa'].nunique() == 1, "Did not properly group prior to calling function"
+    fragment_len = pred_df['fragment_length_aa'].unique()[0]
 
     # find boundaries between fragments (e.g. positions that share no residues) and group fragments between these boundaries
-    pred_df.sort_values(by='fragment start (aa)',inplace=True)
+    pred_df.sort_values(by='fragment_start_aa',inplace=True)
     
     # group so that there is a single fragment per row, get gap, and merge back
     frag_df = pred_df.loc[pred_df.groupby('fragment_name',sort=False)['rank'].idxmin()].copy(True)
-    frag_df['gap_to_next'] = -frag_df['fragment start (aa)'].diff(periods=-1)
+    frag_df['gap_to_next'] = -frag_df['fragment_start_aa'].diff(periods=-1)
     pred_df = pred_df.merge(frag_df[['fragment_name','gap_to_next']],on='fragment_name',how='left',validate='many_to_one')
     
     # get boundaries to find the contigs
-    boundary_list = [0] + list(frag_df[frag_df['gap_to_next'] >= fragment_len]['fragment start (aa)']) + [frag_df['fragment start (aa)'].max()]
+    boundary_list = [0] + list(frag_df[frag_df['gap_to_next'] >= fragment_len]['fragment_start_aa']) + [frag_df['fragment_start_aa'].max()]
     pred_df['fragment contig'] = str(0)
     for fragset_n,(start,stop) in enumerate(pairwise(boundary_list)): # (start,stop]
-        mask = (pred_df['fragment start (aa)']>start)&(pred_df['fragment start (aa)']<=stop)
+        mask = (pred_df['fragment_start_aa']>start)&(pred_df['fragment_start_aa']<=stop)
         pred_df.loc[mask,'fragment contig'] = fragset_n
     if verbose:
         print(f"Found {pred_df.groupby('fragment contig').ngroups} non-overlapping groups of fragments")
@@ -215,7 +215,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
     contacts_list = []
     for i,row in pred_df_copy.iterrows():
         s_extract = parser.get_structure("s", row['path'])
-        fixResidueNumbers(s_extract[0]['B'],row['fragment start (aa)'])
+        fixResidueNumbers(s_extract[0]['B'],row['fragment_start_aa'])
         protein_chains = set(row['protein_chains'].split(','))
         fragment_chain = set(row['fragment_chain'])
         contacts_residues = getInterfaceContactsFromStructure(s_extract,protein_chains,fragment_chain,4.0)
@@ -235,10 +235,10 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
         if output_prefix != '':
             plt.figure(figsize = (40,40))
             ax = sns.heatmap(sim_matrix,
-                        xticklabels=pred_df_copy['fragment start (aa)'],
-                        yticklabels=pred_df_copy['fragment start (aa)'])
-            ax.set_xlabel('fragment start (aa)')
-            ax.set_ylabel('fragment start (aa)')
+                        xticklabels=pred_df_copy['fragment_start_aa'],
+                        yticklabels=pred_df_copy['fragment_start_aa'])
+            ax.set_xlabel('fragment_start_aa')
+            ax.set_ylabel('fragment_start_aa')
             plt.savefig(f"{output_prefix}_contactsim_fragments.png",dpi=300)
 
         # hierarchically cluster
@@ -252,7 +252,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
         pred_df_copy['cluster'] = clusters
 
     # Get the cluster representative for each cluster
-    pred_clusrep_df = pred_df_copy.loc[pred_df_copy.groupby('cluster')['iptm'].idxmax()].sort_values(by='fragment start (aa)')
+    pred_clusrep_df = pred_df_copy.loc[pred_df_copy.groupby('cluster')['iptm'].idxmax()].sort_values(by='fragment_start_aa')
 
     # get the first and last member for each cluster (to define the range of fragments that fall into it)
     cluster_size = []
@@ -265,13 +265,13 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
         cluster_n_df = pred_df_copy[pred_df_copy['cluster']==cluster_n]
         cluster_size.append(len(cluster_n_df))
         cluster_n_fragments.append(cluster_n_df['fragment_name'].nunique())
-        first_fragment_center.append(cluster_n_df['fragment center (aa)'].min())
-        last_fragment_center.append(cluster_n_df['fragment center (aa)'].max())
+        first_fragment_center.append(cluster_n_df['fragment_center_aa'].min())
+        last_fragment_center.append(cluster_n_df['fragment_center_aa'].max())
         cluster_member_idx_list.append(list(cluster_n_df.index))
     pred_clusrep_df['cluster_size'] = cluster_size
     pred_clusrep_df['cluster_n_fragments'] = cluster_n_fragments
-    pred_clusrep_df['cluster first fragment center (aa)'] = first_fragment_center
-    pred_clusrep_df['cluster last fragment center (aa)'] = last_fragment_center
+    pred_clusrep_df['cluster first fragment_center_aa'] = first_fragment_center
+    pred_clusrep_df['cluster last fragment_center_aa'] = last_fragment_center
     pred_clusrep_df['cluster_member_idx'] = cluster_member_idx_list
     pred_clusrep_df.drop(columns=['contact_set'],inplace=True)
 
@@ -292,7 +292,7 @@ def organizeClusters(cluster_df,baseline,scale,overlap_width=10):
     cluster_df = cluster_df.copy(deep=True)
     clusters = [(cluster,cluster_start,cluster_end) 
                  for i,(cluster,cluster_start,cluster_end) in 
-                     cluster_df[['full_cluster_name','cluster first fragment center (aa)','cluster last fragment center (aa)']].iterrows()]
+                     cluster_df[['full_cluster_name','cluster first fragment_center_aa','cluster last fragment_center_aa']].iterrows()]
     clusters.sort(key=getClusterWidth,reverse=True)
     
     placed_clusters = []
@@ -335,20 +335,20 @@ def organizeClusters(cluster_df,baseline,scale,overlap_width=10):
     return cluster_df.merge(cluster_height_df,on='full_cluster_name',how='left')    
 
 def plotClusters(pred_df,cluster_df,contig_df,name):
-    xscale=int(10*pred_df['fragment center (aa)'].max()/300)
+    xscale=int(10*pred_df['fragment_center_aa'].max()/300)
     fig = plt.figure(figsize=(xscale,5))
     # grouped_pred_df = pred_df.loc[pred_df.groupby('fragment_name')['n_contacts'].idxmax()]
     pred_df.groupby('fragment_name')['weighted_contacts'].mean().max()
     max_contacts_height = pred_df.groupby('fragment_name')['weighted_contacts'].mean().max()
     cluster_df = organizeClusters(cluster_df,max_contacts_height+1,.75,5)
-    ax = sns.lineplot(data=pred_df,x='fragment center (aa)',y='weighted_contacts')
+    ax = sns.lineplot(data=pred_df,x='fragment_center_aa',y='weighted_contacts')
     plt.hlines(y=[max_contacts_height]*contig_df['fragment contig'].nunique(),
-               xmin=list(contig_df.groupby('fragment contig')['fragment center (aa)'].min()),
-               xmax=[x+1 for x in contig_df.groupby('fragment contig')['fragment center (aa)'].max()],
+               xmin=list(contig_df.groupby('fragment contig')['fragment_center_aa'].min()),
+               xmax=[x+1 for x in contig_df.groupby('fragment contig')['fragment_center_aa'].max()],
                color='red',linewidth=5,alpha=.5)
     plt.hlines(y=list(cluster_df['height']),
-               xmin=list(cluster_df['cluster first fragment center (aa)']),
-               xmax=list(cluster_df['cluster last fragment center (aa)']+1),
+               xmin=list(cluster_df['cluster first fragment_center_aa']),
+               xmax=list(cluster_df['cluster last fragment_center_aa']+1),
                color='blue',linewidth=5,alpha=.5)
     plt.savefig(f"{name}.png",dpi=300)
     plt.show()
@@ -411,7 +411,7 @@ def getResidueOverlapReq(fragmentLength,residueOverlapFrac):
 
 def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     # lists for storing data
-    gene_list = []
+    fragmentparentname_list = []
     ## experimental peak columns
     exp_cluster_id_list = []
     exp_start_list = []
@@ -433,51 +433,51 @@ def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     print(f"Residue overlap fraction cutoffs = {residue_overlap_frac_list}")
     for residue_overlap_frac in residue_overlap_frac_list:
         for i,(_,exp_peak) in enumerate(exp_df.iterrows()):
-            res_overlap = getResidueOverlapReq(exp_peak['fragment length (aa)'],residue_overlap_frac)
+            res_overlap = getResidueOverlapReq(exp_peak['fragment_length_aa'],residue_overlap_frac)
             for j,(_,pred_peak) in enumerate(pred_df.iterrows()):
-                # print(exp_peak['peak region first fragment center (aa)'],exp_peak['peak region last fragment center (aa)'])
+                # print(exp_peak['peak region first fragment_center_aa'],exp_peak['peak region last fragment_center_aa'])
 
                 # if the peaks come from different genes, or different lengths, they can't overlap
-                if (exp_peak['gene'] != pred_peak['gene']) or (exp_peak['fragment length (aa)'] != pred_peak['fragment length (aa)']):
+                if (exp_peak['fragment_parent_name'] != pred_peak['fragment_parent_name']) or (exp_peak['fragment_length_aa'] != pred_peak['fragment_length_aa']):
                     continue
-                overlap = rangeOverlap(exp_peak['peak region first fragment center (aa)'],exp_peak['peak region last fragment center (aa)'],
-                                           pred_peak['cluster first fragment center (aa)'],pred_peak['cluster last fragment center (aa)'],
-                                           exp_peak['fragment length (aa)'],res_overlap)
+                overlap = rangeOverlap(exp_peak['peak region first fragment_center_aa'],exp_peak['peak region last fragment_center_aa'],
+                                           pred_peak['cluster first fragment_center_aa'],pred_peak['cluster last fragment_center_aa'],
+                                           exp_peak['fragment_length_aa'],res_overlap)
 
                 # append data to create new row
-                gene_list.append(exp_peak['gene'])
+                fragmentparentname_list.append(exp_peak['fragment_parent_name'])
                 ## experimental peak columns
                 exp_cluster_id_list.append(i)
-                exp_start_list.append(exp_peak['peak region first fragment center (aa)'])
-                exp_end_list.append(exp_peak['peak region last fragment center (aa)'])
-                exp_inhibeffect_list.append(exp_peak['E = inhibitory effect (enrichment)'])
+                exp_start_list.append(exp_peak['peak region first fragment_center_aa'])
+                exp_end_list.append(exp_peak['peak region last fragment_center_aa'])
+                exp_inhibeffect_list.append(exp_peak['inhibitory_effect_enrichment'])
                 exp_type_list.append(exp_peak['peak type'])
                 ## pred peak columns
                 pred_cluster_id_list.append(j)
-                pred_start_list.append(pred_peak['cluster first fragment center (aa)'])
-                pred_end_list.append(pred_peak['cluster last fragment center (aa)'])
+                pred_start_list.append(pred_peak['cluster first fragment_center_aa'])
+                pred_end_list.append(pred_peak['cluster last fragment_center_aa'])
                 pred_clustersize_list.append(pred_peak['cluster_size'])
                 pred_clusternfragments_list.append(pred_peak['cluster_n_fragments'])
                 ## overlap
-                fragmentlength_list.append(exp_peak['fragment length (aa)'])
+                fragmentlength_list.append(exp_peak['fragment_length_aa'])
                 overlap_frac_list.append(residue_overlap_frac)
                 overlap_res_list.append(res_overlap)
                 overlap_list.append(overlap)
 
 
     overlap_df = pd.DataFrame({
-        'gene':gene_list,
+        'fragment parent name':fragmentparentname_list,
         'exp cluster id':exp_cluster_id_list,
         'exp cluster first':exp_start_list,
         'exp cluster last' :exp_end_list,
-        'E = inhibitory effect (enrichment)':exp_inhibeffect_list,
+        'inhibitory_effect_enrichment':exp_inhibeffect_list,
         'peak type':exp_type_list,
         'pred cluster id':pred_cluster_id_list,
         'pred cluster first':pred_start_list,
         'pred cluster last':pred_end_list,
         'pred cluster size':pred_clustersize_list,
         'pred cluster n fragments':pred_clusternfragments_list,
-        'fragment length (aa)':fragmentlength_list,
+        'fragment_length_aa':fragmentlength_list,
         'overlap fraction req':overlap_frac_list,
         'overlap req':overlap_res_list,
         'overlap':overlap_list
@@ -494,10 +494,10 @@ def calculateBenchmarkStatistics(overlap_df,
     nExpKnownPeaks = len(exp_df[exp_df['peak type']=='known'])
 
     if byGene:
-        nExpPeaks_byGene_df = exp_df.groupby('gene').size().reset_index()
-        nExpPeaks_byGene = dict(zip(nExpPeaks_byGene_df['gene'],nExpPeaks_byGene_df[0]))
-        nExpKnownPeaks_byGene_df = exp_df[exp_df['peak type']=='known'].groupby('gene').size().reset_index()
-        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['gene'],nExpKnownPeaks_byGene_df[0]))
+        nExpPeaks_byGene_df = exp_df.groupby('fragment_parent_name').size().reset_index()
+        nExpPeaks_byGene = dict(zip(nExpPeaks_byGene_df['fragment_parent_name'],nExpPeaks_byGene_df[0]))
+        nExpKnownPeaks_byGene_df = exp_df[exp_df['peak type']=='known'].groupby('fragment_parent_name').size().reset_index()
+        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['fragment_parent_name'],nExpKnownPeaks_byGene_df[0]))
 
         nExpPeaks_list = []
         nExpKnownPeaks_list = []
@@ -515,7 +515,7 @@ def calculateBenchmarkStatistics(overlap_df,
     noverlappredpeaks_known_list = []
 
     geneName = ""
-    genesList = list(overlap_df.gene.unique()) if byGene else [""]
+    genesList = list(overlap_df.fragment_parent_name.unique()) if byGene else [""]
     print(f"Genes: {genesList}")
     for minClusterSize in range(minClusterSizeRange[0],minClusterSizeRange[1]):
         for resOverlapReq in range(15,maxFragmentLength+1):
@@ -529,7 +529,7 @@ def calculateBenchmarkStatistics(overlap_df,
                 else:
                     filt_overlap_df = overlap_df[(overlap_df['pred cluster n fragments']>=minClusterSize)&
                                                 (overlap_df['overlap fraction req']==resOverlapFrac)&
-                                                (overlap_df['gene']==geneName)]
+                                                (overlap_df['fragment_parent_name']==geneName)]
                 ntotalpredpeaks = filt_overlap_df.groupby('pred cluster id').ngroups
                 noverlapexppeaks = filt_overlap_df[filt_overlap_df['overlap']==True].groupby('exp cluster id').ngroups
                 noverlappredpeaks = filt_overlap_df[filt_overlap_df['overlap']==True].groupby('pred cluster id').ngroups
@@ -565,7 +565,7 @@ def calculateBenchmarkStatistics(overlap_df,
                                 '# overlap known pred peaks':noverlappredpeaks_known_list
                             })
     else:
-        stat_df = pd.DataFrame({'gene':genename_list,
+        stat_df = pd.DataFrame({'fragment_parent_name':genename_list,
                                 'min cluster size':minClusterSize_list,
                                 'overlap frac req':resOverlapFrac_list,
                                 '# exp peaks':nExpPeaks_list,
@@ -602,9 +602,9 @@ def mergeAllPeaks(peak_list):
     result = {
         'fragment_name':rep_fragment.fragment_name,
         'rank':rep_fragment['rank'],
-        'fragment start (aa)':rep_fragment['fragment start (aa)'],
-        'fragment center (aa)':rep_fragment['fragment center (aa)'],
-        'fragment end (aa)':rep_fragment['fragment end (aa)'],
+        'fragment_start_aa':rep_fragment['fragment_start_aa'],
+        'fragment_center_aa':rep_fragment['fragment_center_aa'],
+        'fragment_end_aa':rep_fragment['fragment_end_aa'],
         'plddt':rep_fragment['plddt'],
         'ptm':rep_fragment['ptm'],
         'iptm':rep_fragment['iptm'],
@@ -613,16 +613,16 @@ def mergeAllPeaks(peak_list):
         'protein_chains':rep_fragment['protein_chains'],
         'fragment_chain':rep_fragment['fragment_chain'],
         'weighted_contacts':rep_fragment['weighted_contacts'],
-        'gene':rep_fragment['gene'],
-        'condition':rep_fragment['condition'],
-        'fragment length (aa)':rep_fragment['fragment length (aa)'],
+        'fragment_parent_name':rep_fragment['fragment_parent_name'],
+        'protein_name':rep_fragment['protein_name'],
+        'fragment_length_aa':rep_fragment['fragment_length_aa'],
         'cluster':list(set(itertools.chain.from_iterable(peak_set_df['cluster']))),
         'cluster_size':peak_set_df['cluster_size'].sum(),
         'cluster_n_fragments':peak_set_df['cluster_n_fragments'].sum(),
-        'cluster first fragment center (aa)':peak_set_df['cluster first fragment center (aa)'].min(),
-        'cluster last fragment center (aa)':peak_set_df['cluster last fragment center (aa)'].max(),
-        'cluster first residue':peak_set_df['cluster first fragment center (aa)'].min() - (rep_fragment['fragment length (aa)']-1)/2,
-        'cluster last residue':peak_set_df['cluster last fragment center (aa)'].max() + (rep_fragment['fragment length (aa)']-1)/2,
+        'cluster first fragment_center_aa':peak_set_df['cluster first fragment_center_aa'].min(),
+        'cluster last fragment_center_aa':peak_set_df['cluster last fragment_center_aa'].max(),
+        'cluster first residue':peak_set_df['cluster first fragment_center_aa'].min() - (rep_fragment['fragment_length_aa']-1)/2,
+        'cluster last residue':peak_set_df['cluster last fragment_center_aa'].max() + (rep_fragment['fragment_length_aa']-1)/2,
         'n_contacts_cutoff':rep_fragment['n_contacts_cutoff'],
         'n_weighted_contacts_cutoff':rep_fragment['n_weighted_contacts_cutoff'],
         'iptm_cutoff':rep_fragment['iptm_cutoff'],
@@ -636,15 +636,15 @@ def clusterOverlap(smaller_peak,larger_peak, verbose=False):
     
     Function is less fancy and slower because it explicitly compares all residues, but it's easier to debug :)
     '''
-    assert peakResLength(smaller_peak) <= peakResLength(larger_peak), (smaller_peak['fragment length (aa)'],larger_peak['fragment length (aa)'])
-    assert smaller_peak['fragment length (aa)'] == larger_peak['fragment length (aa)'], (smaller_peak['fragment length (aa)'],larger_peak['fragment length (aa)'])
-    fragment_half_length = (smaller_peak['fragment length (aa)']-1)/2
-    sp_res_start = int(smaller_peak['cluster first fragment center (aa)'] - fragment_half_length)
-    sp_res_stop = int(smaller_peak['cluster last fragment center (aa)'] + fragment_half_length)
+    assert peakResLength(smaller_peak) <= peakResLength(larger_peak), (smaller_peak['fragment_length_aa'],larger_peak['fragment_length_aa'])
+    assert smaller_peak['fragment_length_aa'] == larger_peak['fragment_length_aa'], (smaller_peak['fragment_length_aa'],larger_peak['fragment_length_aa'])
+    fragment_half_length = (smaller_peak['fragment_length_aa']-1)/2
+    sp_res_start = int(smaller_peak['cluster first fragment_center_aa'] - fragment_half_length)
+    sp_res_stop = int(smaller_peak['cluster last fragment_center_aa'] + fragment_half_length)
     sp_res_set = set(x for x in range(sp_res_start,sp_res_stop+1))
     
-    lp_res_start = int(larger_peak['cluster first fragment center (aa)'] - fragment_half_length)
-    lp_res_stop = int(larger_peak['cluster last fragment center (aa)'] + fragment_half_length)
+    lp_res_start = int(larger_peak['cluster first fragment_center_aa'] - fragment_half_length)
+    lp_res_stop = int(larger_peak['cluster last fragment_center_aa'] + fragment_half_length)
     lp_res_set = set(x for x in range(lp_res_start,lp_res_stop+1))
     
     
@@ -659,17 +659,18 @@ def clusterOverlap(smaller_peak,larger_peak, verbose=False):
     return frac_overlapping
 
 def peakResLength(peak):
-    fragment_half_length = (peak['fragment length (aa)']-1)/2
-    return peak['cluster last fragment center (aa)']-peak['cluster first fragment center (aa)']+(2*fragment_half_length)
+    fragment_half_length = (peak['fragment_length_aa']-1)/2
+    return peak['cluster last fragment_center_aa']-peak['cluster first fragment_center_aa']+(2*fragment_half_length)
     
 def clusterPeaksByOverlapGroupedDF(peak_df,
                                     frac_overlap=0.7,
                                     verbose=False):
-    assert peak_df.condition.nunique() == 1
-    assert peak_df.gene.nunique() == 1
-    assert peak_df['fragment length (aa)'].nunique() == 1
+    assert peak_df.protein_name.nunique() == 1
+    assert peak_df.fragment_parent_name.nunique() == 1
+    assert peak_df.fragment_length_aa.nunique() == 1
+    assert peak_df.description.nunique() == 1
     
-    # n_res_overlap = math.ceil(frac_overlap*peak_df['fragment length (aa)'].unique())
+    # n_res_overlap = math.ceil(frac_overlap*peak_df['fragment_length_aa'].unique())
     
     peak_df = peak_df.copy(deep=True).reset_index().sort_values(by='weighted_contacts',ascending=False)
     peak_df['cluster'] = peak_df['cluster'].apply(lambda x: [x])
@@ -722,15 +723,15 @@ def clusterPeaksByOverlapGroupedDF(peak_df,
     return pd.DataFrame(cluster_data)
     
 def clusterPeaksByOverlap(peak_df,
-                          group_vals=['gene','condition'],
+                          group_vals=['fragment_parent_name','protein_name','fragment_length_aa','description'],
                           frac_overlap=0.7,
                           verbose=False):
 
     if 'cluster first residue' not in peak_df.columns:
-        peak_df['cluster first residue'] = peak_df['cluster first fragment center (aa)'] - (peak_df['fragment length (aa)']-1)/2
+        peak_df['cluster first residue'] = peak_df['cluster first fragment_center_aa'] - (peak_df['fragment_length_aa']-1)/2
     
     if 'cluster last residue' not in peak_df.columns:
-        peak_df['cluster last residue'] = peak_df['cluster last fragment center (aa)'] + (peak_df['fragment length (aa)']-1)/2
+        peak_df['cluster last residue'] = peak_df['cluster last fragment_center_aa'] + (peak_df['fragment_length_aa']-1)/2
     cluster_df_list = []
     print(f"Group predicted peaks by {group_vals}")
     for group_variables,group_df in peak_df.groupby(group_vals):

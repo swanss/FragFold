@@ -47,3 +47,19 @@ NEXTFLOWDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/
 WORKDIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/nextflow/practice
 nextflow run ${NEXTFLOWDIR}/fragfold.nf -w $WORKDIR -resume -params-file $NEXTFLOWDIR/params/ftsZ_monomeric_example.yaml
 ```
+
+```
+conda activate fragfold
+REPODIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold
+NEXTFLOWDIR=${REPODIR}/nextflow
+WORKDIR=${REPODIR}/nextflow/practice
+nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -resume -params-file ftsZ_monomeric_example.yaml
+```
+
+```
+conda activate fragfold3
+REPODIR=/home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold
+NEXTFLOWDIR=${REPODIR}/nextflow
+WORKDIR=${REPODIR}/results/v1/nexflow
+nextflow run ${NEXTFLOWDIR}/process_v1_output.nf -w $WORKDIR -resume
+```

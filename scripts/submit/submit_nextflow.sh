@@ -8,17 +8,25 @@
 #SBATCH --output=nf-fragfold.%j.log
 
 ENV=fragfold
-WORKFLOW=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/ftsZ_homomeric_example.nf
+WORKFLOW=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/main.nf
 NF_CFG=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/nextflow.config
+PARAMS=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/params/ftsZ_monomeric_example.yaml
 WORK_DIR=$(pwd -P)
+LOGS=${WORK_DIR}/nextflow_logs
 
-mkdir -p ${WORK_DIR}
-mkdir -p ${WORK_DIR}/nextflow_logs
-
-# Go to a temp dir
+# Go to a tmp dir
 USER=$(whoami) && cd $TMPDIR
-conda run -n $ENV --no-capture-output nextflow run $WORKFLOW -w $WORK_DIR -c $NF_CFG -resume 
+echo "tmpdir: "$TMPDIR
 
-cp *.csv $WORK_DIR && \
-    cp -r .nextflow* ${WORK_DIR}/nextflow_logs && \
+# If this has already been run, copy the logs back to the tmp dir so that we can resume
+if [ -d "$LOGS"]; then
+    cp -r $LOGS/.* .
+else
+    mkdir -p ${WORK_DIR}/nextflow_logs
+fi
+
+conda run -n $ENV --no-capture-output nextflow run $WORKFLOW -w $WORK_DIR -c $NF_CFG -params-file $PARAMS -resume 
+
+cp -r .nextflow* ${WORK_DIR}/nextflow_logs && \
+    *.csv $WORK_DIR && \
     echo 'Finished job and copied files from $TMPDIR'

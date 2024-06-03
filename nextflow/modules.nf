@@ -2,6 +2,7 @@
 // Define each process
 process build_msa {
     label 'cpu_network'
+    // cache 'lenient'
 
     input:
         path query_seq
@@ -20,6 +21,7 @@ process build_msa {
 
 process process_msa {
     label 'cpu'
+    // cache 'lenient'
 
     input:
         path a3m
@@ -50,6 +52,7 @@ process process_msa {
 
 process colabfold {
     label 'gpu'
+    // cache 'lenient'
 
     input:
         path a3m_concat
@@ -70,6 +73,7 @@ process colabfold {
 
 process create_summary_csv {
     label 'cpu'
+    // cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
 
     input:
@@ -77,10 +81,11 @@ process create_summary_csv {
         path pdb_file
         val protein_name
         val fragment_parent_name
+        path experimental_data
         val output_name
 
     output:
-        path '*.csv'
+        path 'results_expmerge.csv', emit: csv
 
     shell:
     '''
@@ -88,6 +93,55 @@ process create_summary_csv {
         --predicted_pdbs !{pdb_file} \
         --confidence_logs log_file_*.txt \
         --full_protein !{protein_name} \
-        --fragment_protein !{fragment_parent_name}
+        --fragment_protein !{fragment_parent_name} \
+        --experimental_data !{experimental_data} \
+        --generate_plots
+    '''
+}
+
+process create_summary_csv_fromjson {
+    label 'cpu'
+    // cache 'lenient'
+    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+
+    input:
+        path json_file
+        path experimental_data
+        val output_name
+
+    output:
+        path 'results_expmerge.csv', emit: csv
+
+    shell:
+    '''
+    python !{repo_dir}/fragfold/colabfold_process_output.py \
+        --import_json !{json_file} \
+        --experimental_data !{experimental_data} \
+        --generate_plots
+    '''
+}
+
+process predict_peaks {
+    label 'cpu_small'
+    // cache 'lenient'
+    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+
+    input:
+        path csv
+        val output_name
+
+    output:
+        path '*.csv'
+
+    shell:
+    '''
+    python !{repo_dir}/fragfold/predict_alphafold_peaks.py \
+        --colabfold_data_csv !{csv} \
+        --n_contacts 3 \
+        --n_weighted_contacts 3 \
+        --iptm 0.3 \
+        --contact_distance 0.4 \
+        --cluster_peaks_frac_overlap 0.7 \
+        --verbose
     '''
 }

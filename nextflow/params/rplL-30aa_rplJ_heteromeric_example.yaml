@@ -1,0 +1,11 @@
+job_name: rplL-30aa_rplJ_test
+heteromeric_mode: true
+protein_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplJ_A0A140NDB6.fasta
+fragment_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplL_A0A140SS63.fasta
+fragment_ntermres_start: 1
+fragment_ntermres_final: 9
+fragment_length: 30
+protein_nterm_res: 1
+protein_cterm_res: 165
+protein_copies: 1
+experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv

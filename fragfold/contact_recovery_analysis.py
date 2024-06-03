@@ -35,14 +35,14 @@ def plotContactRecovery(pred_df,name,dir_name,pos='',int_rec_ls='-'):
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     
     # weighted contacts gives a sense of how many peaks were predicted overall
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='weighted_contacts',ax=ax1)
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='weighted_contacts',ax=ax1)
     ax1.set_ylabel('ipTM-weighted contacts')
-    ax1.set_xlabel('Fragment center (aa)')
+    ax1.set_xlabel('fragment_center_aa')
 
     # recovery highlights how many of the fragments recover binding site residues/specific fragment-protein contacts
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='frac_bindingres_recovered',ax=ax2,color=sns.color_palette()[1])
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='frac_contacts_recovered',ax=ax2,color=sns.color_palette()[2],ls=int_rec_ls)
-    ax2.set_xlabel('Fragment center (aa)')
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='frac_bindingres_recovered',ax=ax2,color=sns.color_palette()[1])
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='frac_contacts_recovered',ax=ax2,color=sns.color_palette()[2],ls=int_rec_ls)
+    ax2.set_xlabel('fragment_center_aa')
     ax2.set_ylabel('Recovery (%)')
     ax2.set_ylim(0,1)
     
@@ -73,8 +73,8 @@ def calculateStructureRecoveryFromDFRow(native_contacts,contact_distance_cutoff,
     for chain in list(colabfold_structure[0].get_chains()):
         colabfold_structure[0].detach_child(chain.id)
         if (chain.id == contact_comparison_data['colabfold_fragment_chain']):
-            # print(f"Adjust fragment chain, start: {row['fragment start (aa)']}")
-            fixResidueNumbers(chain,row['fragment start (aa)'])
+            # print(f"Adjust fragment chain, start: {row['fragment_id']}")
+            fixResidueNumbers(chain,row['fragment_id'])
             chain.id = contact_comparison_data['native_fragment_chain']
         else:
             # print(f"Adjust protein chain, start: {colab_chainid2resstart[chain.id]}")
@@ -108,7 +108,7 @@ def calculateStructureRecoveryFromDFRow(native_contacts,contact_distance_cutoff,
             peptide_rmsd = calcRMSDFromRes(native_peptide_res,colab_peptide_res[:len(native_peptide_res)])
     print(f"peptide RMSD: {peptide_rmsd}")
     
-    colabfold_name = f"colabfold_{contact_comparison_data['colabfold_gene']}_{row['fragment start (aa)']}_{row['rank']}"
+    colabfold_name = f"colabfold_{contact_comparison_data['colabfold_gene']}_{row['fragment_id']}_{row['rank']}"
     peptide_rmsd_path = os.path.join("contact_recovery_analysis",job_name,colabfold_name+"_ligandrmsd.pdb")
     if peptide_rmsd < 10 or frac_bindingres_recovered > 0.3:
         io.set_structure(colabfold_structure)
@@ -172,7 +172,7 @@ def main(args):
     # For each gene and condition, import available data and create individual dataframes
     print('Calculating contact recovery...')
     df_list = []
-    # merge_on_list = ['fragment_name','rank','fragment start (aa)','fragment center (aa)','fragment end (aa)']
+    # merge_on_list = ['fragment_name','rank','fragment_id','fragment_center_aa','fragment_end_aa']
     for cont_comp_dict in all_contact_comparison_data:
         print(cont_comp_dict)
         start = time.time()

@@ -138,6 +138,7 @@ executor >  slurm (1)
 [51/8c5e4b] process > process_msa        [100%] 1 of 1 ✔
 [66/32bf2a] process > colabfold (5)      [100%] 11 of 11 ✔
 [89/a44267] process > create_summary_csv [100%] 1 of 1 ✔
+[d8/d7g0w3] process > predict_peaks      [100%] 1 of 1 ✔
 ```
 
 To inspect the output of intermediate steps, use the names of the processes to find the directory. For example to find output from colabfold, go to `/home/gridsan/user/FragFold/nextflow/practice/66/32bf2a*`.
@@ -146,28 +147,21 @@ The final output csv (`*_colabfold_predictions.csv`) is copied to the working di
 
 ### A note on file systems and NextFlow compatibility
 
-Nextflow uses file locking to store task metadata and can only be run in a directory that has locking. This is not compatible with certain file system types, such as Lustre. To check what file systems are available on your system, use `findmnt`, the output will report the file system type for available directories and also describe whether it is available in the OPTIONS column (If you see `noflock`, then you know that locking is not supported).
+Nextflow uses file locking to store task metadata and can only be run in a directory that has locking. This is not compatible with certain filesystem types, such as Lustre. To check what file systems are available on your system, use `findmnt`, the output will report the file system type for available directories and also describe whether locking is available in the OPTIONS column (If you see `noflock`, locking is not supported).
 
 One workaround for this is to run nextflow on a file system that supports locking (e.g. a local filesystem) for task metadata storage while running the processes/and storing the output on a shared lustre directory. This works because the directory where results are stored does not need file locking (as outputs are always stored in separate directories to avoid collisions). To do this, simply run the nextflow command in a directory with locking and add the `-w` argument to specify the working directory.
 
 As an example, this is how we start nextflow on our HPC:
 ```bash
+# request an interactive node
 LLsub -i --time=1-00:00 --partition=xeon-p8
+# create a new directory on the local filesystem
 USER=$(whoami) && mkdir -p /state/partition1/user/$USER && cd /state/partition1/user/$USER && conda activate fragfold
 NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow scripts
 WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be stored
-nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
+nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR
 ```
 
 ### Submitting nextflow as a job for large colabfold jobs
 
-For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. See the example script: `TODO`
-
-### Downstream analysis
-
-Given the colabfold predictions, you can predict peaks by running `predict_alphafold_peaks.py`.
-
-```bash
-cd example/ftsZ_predictpeaks
-sbatch run_predict_alphafold_peaks.sh
-```
+For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports resume by copying the task metadata files. To get it running your HPC, you will need to edit the slurm directives and paths.

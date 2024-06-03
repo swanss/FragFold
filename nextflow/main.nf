@@ -1,5 +1,5 @@
 // Import processes from module
-include {build_msa; build_msa as build_msa_fragparent; process_msa; colabfold; create_summary_csv;} from './modules'
+include {build_msa; build_msa as build_msa_fragparent; process_msa; colabfold; create_summary_csv; predict_peaks} from './modules'
 
 // Declare syntax version
 nextflow.enable.dsl=2
@@ -26,7 +26,9 @@ workflow {
                         colabfold.out.pdb | collect ,
                         protein_name,
                         fragment_parent_name,
+                        params.experimental_data,
                         params.job_name)
+        predict_peaks(create_summary_csv.out.csv,params.job_name)
     } else {
         build_msa(file(params.protein_query_seq),true)
         process_msa(build_msa.out.a3m,
@@ -44,6 +46,8 @@ workflow {
                            colabfold.out.pdb | collect , 
                            protein_name,
                            protein_name,
+                           params.experimental_data,
                            params.job_name)
+        predict_peaks(create_summary_csv.out.csv,params.job_name)
     }
 }
