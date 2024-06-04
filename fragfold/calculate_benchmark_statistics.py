@@ -48,8 +48,8 @@ def main(args):
     peak_type = []
     for i,row in filt_exp_df.iterrows():
         gene = row['gene'].split('-')[0]
-        peak_start = row['peak region first fragment center (aa)']
-        peak_end = row['peak region last fragment center (aa)']
+        peak_start = row['peak region first fragment_center_aa']
+        peak_end = row['peak region last fragment_center_aa']
         filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']>=peak_start)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']<=peak_end)]

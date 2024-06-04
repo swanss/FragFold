@@ -58,21 +58,20 @@ def clusterWithParams(params:tuple,pred_df:pd.DataFrame,outdir=''):
     # print(n_contacts,n_wcontacts,iptm,contactsimcutoff)
     # Filter all fragments
     filt_pred_df = filterAlphaFoldPredictions(pred_df,n_contacts,n_wcontacts,iptm,True)
-
-    if len(filt_pred_df) < 0:
-        return
+    if len(filt_pred_df) == 0:
+        return None
 
     paramsname = createName(n_contacts,n_wcontacts,iptm,contactsimcutoff)
     dirname = os.path.join(outdir,paramsname)
     pathlib.Path(dirname).mkdir(exist_ok=True)
 
-    # Group by gene/prediction
+    # Group by FragFold job
     df_list = []
-    grouped_df = filt_pred_df.groupby(['gene','condition','fragment length (aa)'])
+    grouped_df = filt_pred_df.groupby(['fragment_parent_name','protein_name','fragment_length_aa','description'],dropna=False)
     print(f"After filtering, there are {grouped_df.ngroups} groups in the dataframe")
-    for (gene,condition,fragmentlen),group_df in grouped_df:
+    for (fragment_parent_name,protein_name,fragmentlen,description),group_df in grouped_df:
         if args.verbose:
-            print(f"Clustering {len(group_df)} predictions from {gene}_{condition}_{fragmentlen} ...")
+            print(f"Clustering {len(group_df)} predictions from {fragment_parent_name}_{protein_name}_{fragmentlen}_{description} ...")
 
         # Find discontinuous sets of fragments (i.e. fragments that don't share residues)
         contigs_df = splitDiscontinuousFragmentSets(group_df,args.verbose) # modify df in place
@@ -89,8 +88,16 @@ def clusterWithParams(params:tuple,pred_df:pd.DataFrame,outdir=''):
 
         grouped_comb_df = pd.concat(grouped_clusters_list,ignore_index=True)
         # Plot the clusters
-        cluster_plot_name =  os.path.join(dirname,f"{paramsname}_{gene}_{condition}_{fragmentlen}")
-        all_fragments_df = pred_df[(pred_df['gene']==gene)&(pred_df['condition']==condition)&(pred_df['fragment length (aa)']==fragmentlen)]
+        cluster_plot_name =  os.path.join(dirname,f"{paramsname}_{fragment_parent_name}_{protein_name}_{fragmentlen}")
+        if not pd.isna(description):
+            all_fragments_df = pred_df[(pred_df['fragment_parent_name']==fragment_parent_name)
+                                    &(pred_df['protein_name']==protein_name)
+                                    &(pred_df['fragment_length_aa']==fragmentlen)
+                                    &(pred_df['description']==description)]
+        else:
+            all_fragments_df = pred_df[(pred_df['fragment_parent_name']==fragment_parent_name)
+                                    &(pred_df['protein_name']==protein_name)
+                                    &(pred_df['fragment_length_aa']==fragmentlen)]
         plotClusters(all_fragments_df,grouped_comb_df,contigs_df,cluster_plot_name)
         
     if len(df_list) > 0:
@@ -114,27 +121,29 @@ def singleParamSet(args):
     
     # Load DF
     pred_df = pd.read_csv(args.colabfold_data_csv,index_col=0)
-    pred_df['fragment length (aa)'] = pred_df['fragment end (aa)'] - pred_df['fragment start (aa)'] + 1
+    pred_df['fragment_length_aa'] = pred_df['fragment_end_aa'] - pred_df['fragment_start_aa'] + 1
     name = createName(args.n_contacts,args.n_weighted_contacts,args.iptm,args.contact_distance)
 
     # Define parameters
     outdir="cluster_info"
     pathlib.Path(outdir).mkdir(exist_ok=True)
     comb_df = clusterWithParams((args.n_contacts,args.n_weighted_contacts,args.iptm,args.contact_distance),pred_df,outdir)
-    comb_df.to_csv(f"predictalphafoldpeaks_{name}.csv")
-
-    if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
-        print("Merging overlapping peaks...")
-        clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
-        print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
-        clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
+    if isinstance(comb_df,pd.DataFrame):
+        comb_df.to_csv(f"predictalphafoldpeaks_{name}.csv")
+        if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
+            print("Merging overlapping peaks...")
+            clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+            print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
+            clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
+    else:
+        print("No peaks predicted (consider relaxing the filters)")
 
 def paramScan(args):
     print("Parameter scan")
 
     # Load DF
     pred_df = pd.read_csv(args.colabfold_data_csv,index_col=0)
-    pred_df['fragment length (aa)'] = pred_df['fragment end (aa)'] - pred_df['fragment start (aa)'] + 1
+    pred_df['fragment_length_aa'] = pred_df['fragment_end_aa'] - pred_df['fragment_start_aa'] + 1
 
     # Define parameter ranges
     allparams_scan = loadParamsSetFromJSON(args.paramscan_json)

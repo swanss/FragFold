@@ -1,0 +1,329 @@
+[
+    {
+        "native_structure": "6unx_ftsZ_ABC.pdb",
+        "native_protein_chains": [
+            "A"
+        ],
+        "native_fragment_chain": "C",
+        "fragment_res_start": 116,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            10
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "ftsZ-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_ftsZ",
+        "protein_name": "ftsZ"
+    },
+    {
+        "native_structure": "6unx_ftsZ_ABC.pdb",
+        "native_protein_chains": [
+            "A"
+        ],
+        "native_fragment_chain": "C",
+        "fragment_res_start": 163,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            10
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "ftsZ-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_ftsZ",
+        "protein_name": "ftsZ"
+    },
+    {
+        "native_structure": "6unx_ftsZ_ABC.pdb",
+        "native_protein_chains": [
+            "A"
+        ],
+        "native_fragment_chain": "B",
+        "fragment_res_start": 186,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            10
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "ftsZ-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_ftsZ",
+        "protein_name": "ftsZ"
+    },
+    {
+        "native_structure": "6unx_ftsZ_ABC.pdb",
+        "native_protein_chains": [
+            "A"
+        ],
+        "native_fragment_chain": "B",
+        "fragment_res_start": 258,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            10
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "ftsZ-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_ftsZ",
+        "protein_name": "ftsZ"
+    },
+    {
+        "native_structure": "6rks_gyrA_AC_gyrB_BD.pdb",
+        "native_protein_chains": [
+            "B"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 12,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "gyrA-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_gyrB",
+        "protein_name": "gyrB"
+    },
+    {
+        "native_structure": "6rks_gyrA_AC_gyrB_BD.pdb",
+        "native_protein_chains": [
+            "C"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 371,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "gyrA-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_gyrA",
+        "protein_name": "gyrA"
+    },
+    {
+        "native_structure": "1rqu_rplL_AB.pdb",
+        "native_protein_chains": [
+            "B"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 5,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "rplL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_rplL",
+        "protein_name": "rplL"
+    },
+    {
+        "native_structure": "3j7z_rplL_6_rplJ_5.pdb",
+        "native_protein_chains": [
+            "5"
+        ],
+        "native_fragment_chain": "6",
+        "fragment_res_start": 5,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "rplL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_rplJ",
+        "protein_name": "rplJ"
+    },
+    {
+        "native_structure": "1eqq_ssb_ABCD.pdb",
+        "native_protein_chains": [
+            "C"
+        ],
+        "native_fragment_chain": "D",
+        "fragment_res_start": 52,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1,
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "ssb-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_ssb",
+        "protein_name": "ssb"
+    },
+    {
+        "native_structure": "1eqq_ssb_ABCD.pdb",
+        "native_protein_chains": [
+            "A",
+            "B"
+        ],
+        "native_fragment_chain": "C",
+        "fragment_res_start": 52,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A",
+            "B"
+        ],
+        "colabfold_protein_chains_start": [
+            1,
+            1
+        ],
+        "colabfold_fragment_chain": "C",
+        "fragment_parent_name": "ssb-coding-EcoliBL21DE3",
+        "description": "30aa_dimer_ssb",
+        "protein_name": "ssb"
+    },
+    {
+        "native_structure": "1aon_groEL_POUBAGHNM.pdb",
+        "native_protein_chains": [
+            "B"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 3,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groL",
+        "protein_name": "groL"
+    },
+    {
+        "native_structure": "1aon_groEL_POUBAGHNM.pdb",
+        "native_protein_chains": [
+            "B"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 87,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groL",
+        "protein_name": "groL"
+    },
+    {
+        "native_structure": "1aon_groEL_POUBAGHNM.pdb",
+        "native_protein_chains": [
+            "B"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 486,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groL",
+        "protein_name": "groL"
+    },
+    {
+        "native_structure": "1aon_groEL_BAGHNM_groES_POU.pdb",
+        "native_protein_chains": [
+            "O"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 229,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groS",
+        "protein_name": "groS"
+    },
+    {
+        "native_structure": "1aon_groEL_BAGHNM_groES_POU.pdb",
+        "native_protein_chains": [
+            "O"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 246,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groS",
+        "protein_name": "groS"
+    },
+    {
+        "native_structure": "1aon_groEL_BAGHNM_groES_POU.pdb",
+        "native_protein_chains": [
+            "O"
+        ],
+        "native_fragment_chain": "A",
+        "fragment_res_start": 246,
+        "fragment_res_length": 30,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "groL-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_groS",
+        "protein_name": "groS"
+    },
+    {
+        "native_structure": "6mi7_lptG_G_lptF_F.pdb",
+        "native_protein_chains": [
+            "F"
+        ],
+        "native_fragment_chain": "G",
+        "fragment_res_start": 317,
+        "fragment_res_length": 14,
+        "colabfold_protein_chains": [
+            "A"
+        ],
+        "colabfold_protein_chains_start": [
+            1
+        ],
+        "colabfold_fragment_chain": "B",
+        "fragment_parent_name": "lptG-coding-EcoliBL21DE3",
+        "description": "30aa_monomer_lptF",
+        "protein_name": "lptF"
+    }
+]

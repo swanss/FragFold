@@ -27,7 +27,7 @@ io = PDBIO()
 pdbparser = PDBParser(QUIET=True)
 
 def getJobName(contact_comp_dict):
-    return f"{contact_comp_dict['colabfold_gene']}_{contact_comp_dict['colabfold_condition']}_{contact_comp_dict['fragment_res_start']}_{contact_comp_dict['fragment_res_length']}"
+    return f"{contact_comp_dict['fragment_parent_name']}_{contact_comp_dict['protein_name']}_{contact_comp_dict['fragment_res_start']}_{contact_comp_dict['fragment_res_length']}"
 
 def plotContactRecovery(pred_df,name,dir_name,pos='',int_rec_ls='-'):
     
@@ -35,14 +35,14 @@ def plotContactRecovery(pred_df,name,dir_name,pos='',int_rec_ls='-'):
     f, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
     
     # weighted contacts gives a sense of how many peaks were predicted overall
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='weighted_contacts',ax=ax1)
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='weighted_contacts',ax=ax1)
     ax1.set_ylabel('ipTM-weighted contacts')
-    ax1.set_xlabel('Fragment center (aa)')
+    ax1.set_xlabel('fragment_center_aa')
 
     # recovery highlights how many of the fragments recover binding site residues/specific fragment-protein contacts
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='frac_bindingres_recovered',ax=ax2,color=sns.color_palette()[1])
-    sns.lineplot(data=pred_df,x='fragment center (aa)',y='frac_contacts_recovered',ax=ax2,color=sns.color_palette()[2],ls=int_rec_ls)
-    ax2.set_xlabel('Fragment center (aa)')
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='frac_bindingres_recovered',ax=ax2,color=sns.color_palette()[1])
+    sns.lineplot(data=pred_df,x='fragment_center_aa',y='frac_contacts_recovered',ax=ax2,color=sns.color_palette()[2],ls=int_rec_ls)
+    ax2.set_xlabel('fragment_center_aa')
     ax2.set_ylabel('Recovery (%)')
     ax2.set_ylim(0,1)
     
@@ -73,8 +73,8 @@ def calculateStructureRecoveryFromDFRow(native_contacts,contact_distance_cutoff,
     for chain in list(colabfold_structure[0].get_chains()):
         colabfold_structure[0].detach_child(chain.id)
         if (chain.id == contact_comparison_data['colabfold_fragment_chain']):
-            # print(f"Adjust fragment chain, start: {row['fragment start (aa)']}")
-            fixResidueNumbers(chain,row['fragment start (aa)'])
+            # print(f"Adjust fragment chain, start: {row['fragment_start_aa']}")
+            fixResidueNumbers(chain,row['fragment_start_aa'])
             chain.id = contact_comparison_data['native_fragment_chain']
         else:
             # print(f"Adjust protein chain, start: {colab_chainid2resstart[chain.id]}")
@@ -108,7 +108,7 @@ def calculateStructureRecoveryFromDFRow(native_contacts,contact_distance_cutoff,
             peptide_rmsd = calcRMSDFromRes(native_peptide_res,colab_peptide_res[:len(native_peptide_res)])
     print(f"peptide RMSD: {peptide_rmsd}")
     
-    colabfold_name = f"colabfold_{contact_comparison_data['colabfold_gene']}_{row['fragment start (aa)']}_{row['rank']}"
+    colabfold_name = f"colabfold_{contact_comparison_data['fragment_parent_name']}_{row['fragment_start_aa']}_{row['rank']}"
     peptide_rmsd_path = os.path.join("contact_recovery_analysis",job_name,colabfold_name+"_ligandrmsd.pdb")
     if peptide_rmsd < 10 or frac_bindingres_recovered > 0.3:
         io.set_structure(colabfold_structure)
@@ -172,10 +172,10 @@ def main(args):
     # For each gene and condition, import available data and create individual dataframes
     print('Calculating contact recovery...')
     df_list = []
-    # merge_on_list = ['fragment_name','rank','fragment start (aa)','fragment center (aa)','fragment end (aa)']
+    # merge_on_list = ['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa']
     for cont_comp_dict in all_contact_comparison_data:
         print(cont_comp_dict)
-        start = time.time()
+        time_start = time.time()
 
         job_name = "native_"+getJobName(cont_comp_dict)
         subdir_name = os.path.join(dir_name,job_name)
@@ -207,7 +207,7 @@ def main(args):
             hires_native_contacts_str = ','.join([residueContactName(x,y) for x,y in hires_native_contacts_residues])
             print(f"{len(hires_native_contacts_residues)} high-resolution contacts ({contact_distance_cutoff} Å): {hires_native_contacts_str}")
 
-            # Define a second of set of interface contacts with a higher cutoff
+            # Define a second set of interface contacts with a higher cutoff
             lores_interface_residues = getInterfaceResidues(s_extract,protein_chain_set, fragment_chain_set, contact_distance=8.0)
             print(f"{len(lores_interface_residues)} interface residues defined from low-resolution (8 Å)")
 
@@ -218,10 +218,10 @@ def main(args):
             io.save(job_name+"_8Ainterfaceresidues.pdb",resSelector)
 
             # Get the rows corresponding to the colabfold gene/condition
-            filt_df = colabfold_data_df[(colabfold_data_df['gene']==cont_comp_dict['colabfold_gene'])&
-                                        (colabfold_data_df['condition']==cont_comp_dict['colabfold_condition'])].copy(deep=True).reset_index(drop=True)
+            filt_df = colabfold_data_df[(colabfold_data_df['fragment_parent_name']==cont_comp_dict['fragment_parent_name'])&
+                                        (colabfold_data_df['protein_name']==cont_comp_dict['protein_name'])].copy(deep=True).reset_index(drop=True)
             if len(filt_df) <= 0:
-                raise ValueError(f"Dataframe does not contain values matching gene: {cont_comp_dict['colabfold_gene']} and condition: {cont_comp_dict['colabfold_condition']}")
+                raise ValueError(f"Dataframe does not contain values matching gene: {cont_comp_dict['fragment_parent_name']} and condition: {cont_comp_dict['protein_name']}")
 
             # Calculate the contact recovery for each prediction
             if n_workers == 1:
@@ -236,9 +236,9 @@ def main(args):
             df = pd.DataFrame(data)
 
             print(f"{len(filt_df)} lines in the filtered dataframe and {len(df)} lines after calculating contact recovery")
-            name = f"{cont_comp_dict['colabfold_gene']}_{cont_comp_dict['colabfold_condition']}"
-            df['gene'] = cont_comp_dict['colabfold_gene']
-            df['condition'] = cont_comp_dict['colabfold_condition']
+            name = f"{cont_comp_dict['fragment_parent_name']}_{cont_comp_dict['protein_name']}"
+            df['fragment_parent_name'] = cont_comp_dict['fragment_parent_name']
+            df['protein_name'] = cont_comp_dict['protein_name']
             df['native_fragment'] = job_name
             df['native_path'] = os.path.join(os.getcwd(),job_name+".pdb")
             df['all_native_contacts'] = hires_native_contacts_str
@@ -253,8 +253,8 @@ def main(args):
             # If all the jobs completed without error, make a record of it
             pass
 
-        stop = time.time()
-        print(f"Elapsed: {stop - start} s")
+        time_stop = time.time()
+        print(f"Elapsed: {time_stop - time_start} s")
 
     # Concatenate all dataframes into a single dataframe that stores all the data.
     concat_df = pd.concat(df_list,ignore_index=True)

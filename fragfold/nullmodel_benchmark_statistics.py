@@ -31,17 +31,17 @@ def randomizePredictedPeakPositions(peak_df,avg_peak_widths=False):
     copy_peak_df = peak_df.copy(deep=True)
 
     # drop values that will no longer have meaning after randomizing predicted peak positions
-    copy_peak_df.drop(columns=['fragment start (aa)', 'fragment center (aa)', 'fragment end (aa)', 'cluster_member_idx'])
+    copy_peak_df.drop(columns=['fragment_id', 'fragment_center_aa', 'fragment_end_aa', 'cluster_member_idx'])
 
-    copy_peak_df['cluster width (aa)'] = copy_peak_df['cluster last fragment center (aa)'] - copy_peak_df['cluster first fragment center (aa)']
-    copy_peak_df['cluster first fragment center (aa)'] = copy_peak_df.gene.apply(lambda x: random.randint(*benchmark_gene_fragment_start_range[x]))
+    copy_peak_df['cluster width (aa)'] = copy_peak_df['cluster last fragment_center_aa'] - copy_peak_df['cluster first fragment_center_aa']
+    copy_peak_df['cluster first fragment_center_aa'] = copy_peak_df.gene.apply(lambda x: random.randint(*benchmark_gene_fragment_start_range[x]))
     if not avg_peak_widths:
         # preserve the number of predicted peaks and their width, but randomize their positions
-        copy_peak_df['cluster last fragment center (aa)'] = copy_peak_df['cluster first fragment center (aa)'] + copy_peak_df['cluster width (aa)']
+        copy_peak_df['cluster last fragment_center_aa'] = copy_peak_df['cluster first fragment_center_aa'] + copy_peak_df['cluster width (aa)']
     else:
         # average the peak widths
         copy_peak_df['cluster width (aa)'] = np.round(copy_peak_df['cluster width (aa)'].mean())
-        copy_peak_df['cluster last fragment center (aa)'] = copy_peak_df['cluster first fragment center (aa)'] + copy_peak_df['cluster width (aa)']
+        copy_peak_df['cluster last fragment_center_aa'] = copy_peak_df['cluster first fragment_center_aa'] + copy_peak_df['cluster width (aa)']
 
     return copy_peak_df
 
@@ -55,12 +55,12 @@ def randomizePredictedPeakPositionsNoOverlap(peak_df,
     copy_peak_df = peak_df.copy(deep=True)
 
     # drop values that will no longer have meaning after randomizing predicted peak positions
-    copy_peak_df.drop(columns=['fragment start (aa)', 'fragment center (aa)', 'fragment end (aa)',
+    copy_peak_df.drop(columns=['fragment_id', 'fragment_center_aa', 'fragment_end_aa',
                                'cluster first residue', 'cluster last residue'])
-    copy_peak_df['cluster width (aa)'] = copy_peak_df['cluster last fragment center (aa)'] - copy_peak_df['cluster first fragment center (aa)']
+    copy_peak_df['cluster width (aa)'] = copy_peak_df['cluster last fragment_center_aa'] - copy_peak_df['cluster first fragment_center_aa']
     if avg_peak_widths:
         copy_peak_df['cluster width (aa)'] = np.round(copy_peak_df['cluster width (aa)'].mean())
-        copy_peak_df['cluster last fragment center (aa)'] = copy_peak_df['cluster first fragment center (aa)'] + copy_peak_df['cluster width (aa)']
+        copy_peak_df['cluster last fragment_center_aa'] = copy_peak_df['cluster first fragment_center_aa'] + copy_peak_df['cluster width (aa)']
 
     all_resampled_peaks_df_list = []
     for (gene,condition),group_df in copy_peak_df.groupby(group_vars):
@@ -70,8 +70,8 @@ def randomizePredictedPeakPositionsNoOverlap(peak_df,
             first_center = -1
             while overlapsExistingPeak:
                 # try sampling new positions for the peak
-                peak['cluster first fragment center (aa)'] = random.randint(*benchmark_gene_fragment_start_range[peak['gene']])
-                peak['cluster last fragment center (aa)'] = peak['cluster first fragment center (aa)'] + peak['cluster width (aa)']
+                peak['cluster first fragment_center_aa'] = random.randint(*benchmark_gene_fragment_start_range[peak['gene']])
+                peak['cluster last fragment_center_aa'] = peak['cluster first fragment_center_aa'] + peak['cluster width (aa)']
 
                 # check if it overlaps a peak that was already placed
                 overlapsExistingPeak = False
@@ -116,8 +116,8 @@ def main(args):
     peak_type = []
     for i,row in filt_exp_df.iterrows():
         gene = row['gene'].split('-')[0]
-        peak_start = row['peak region first fragment center (aa)']
-        peak_end = row['peak region last fragment center (aa)']
+        peak_start = row['peak region first fragment_center_aa']
+        peak_end = row['peak region last fragment_center_aa']
         filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']>=peak_start)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']<=peak_end)]

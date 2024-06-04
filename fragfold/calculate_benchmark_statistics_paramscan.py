@@ -35,8 +35,8 @@ benchmark_conditions = {
 
 def filterLengthsByGene(df):
     # separate function so that it can be easily identified/modified for future iterations where things change
-    filt_df = df[(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment length (aa)']==14)|
-                 ~(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment length (aa)']==30)]
+    filt_df = df[(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==14)|
+                 ~(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==30)]
     print(f"There are {len(df)} peaks in the original df and {len(filt_df)} after filtering by lengths")
     return filt_df
 
@@ -64,8 +64,8 @@ def main(args):
     peak_type = []
     for i,row in filt_exp_df.iterrows():
         gene = row['gene'].split('-')[0]
-        peak_start = row['peak region first fragment center (aa)']
-        peak_end = row['peak region last fragment center (aa)']
+        peak_start = row['peak region first fragment_center_aa']
+        peak_end = row['peak region last fragment_center_aa']
         filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']>=peak_start)&
                             (andrew_df['protein-protein interaction inhibitory peak center (aa)']<=peak_end)]
