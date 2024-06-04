@@ -55,8 +55,7 @@ bash install_fragfold.sh
 
 # Running FragFold
 
-FragFold uses [nextflow](https://www.nextflow.io/) to manage the execution of the pipeline. MSA building with MMseq2s, MSA processing/concatenation, ColabFold, and the analysis and aggregation are each defined as individual **processes** in `FragFold/nextflow/modules.nf` and then used to construct **workflows** for modeling homomeric or heteromeric interactions between fragments and full-length proteins, e.g. `FragFold/nextflow/heteromeric_fragments.nf`. The details of execution, such as whether a process should be run locally or submitted to a job queue in an HPC environment is controlled by the config file `FragFold/nextflow/nextflow.config`.
-
+FragFold uses [nextflow](https://www.nextflow.io/) to manage the execution of the pipeline. MSA building with MMseq2s, MSA processing/concatenation, ColabFold, and the analysis and aggregation are each defined as individual **processes** in `FragFold/nextflow/modules.nf` and then used to construct **workflows** for modeling homomeric or heteromeric interactions between fragments and full-length proteins, e.g. `FragFold/nextflow/main.nf`. The details of execution, such as whether a process should be run locally or submitted to a job queue in an HPC environment is controlled by the config file `FragFold/nextflow/nextflow.config`. The job-specific parameters are defined in a yaml file, for example, `FragFold/nextflow/params/ftsZ_monomeric_example.yaml`.
 
 ## FtsZ example
 
@@ -100,23 +99,23 @@ In this example, we define a process profile with the label `cpu_network`. If yo
 Repeat this for all of the profiles that are defined in the config file. Note that if you have nodes with different memory/cpu/time limits, you will need to adjust these values to match those.
 
 Tips
-- If you'd like to run all steps locally, go to `FragFold/nextflow/modules.nf` and replace the labels for each process with `'standard'`
+- If you'd like to run all steps locally, go to `FragFold/nextflow/modules.nf` and replace the label for each process with `'standard'`
 - If your cluster uses a different resource manager, check the nextflow executor [docs](https://www.nextflow.io/docs/latest/executor.html) to see if it is supported and edit the profiles accordingly.
 
 ### Setting job-specific variables
 
-Now we set the job-specific parameters that control FragFold execution. In order to run the example `FragFold/nextflow/ftsZ_homomeric_example.nf`, you will only need to edit the path of the query sequence to match your system.
+Now we set the job-specific parameters that control FragFold execution. In order to run the example, use `FragFold/nextflow/params/ftsZ_monomeric_example.yaml`, you will only need to edit the path of the query sequence and experimental to match your local installation.
 
-```nextflow
-// Define parameters
-params.job_name = "ftsZ_test"
-params.query_seq = "path/to/repo/FragFold/example/ftsZ.fasta" // edit this path according to your repo
-params.fragment_ntermres_start = 160
-params.fragment_ntermres_final = 170
-params.fragment_length = 30
-params.protein_nterm_res = 150
-params.protein_cterm_res = 200
-params.protein_copies = 1
+```yaml
+job_name: ftsZ_test
+heteromeric_mode: false
+protein_query_seq: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/gene_fasta/ftsZ_A0A140NFM6.fasta
+fragment_ntermres_start: 260 # set to -1 to start at the first residue
+fragment_ntermres_final: 264 # set to -1 to define up to the "N - fragment_length + 1" fragment.
+fragment_length: 30
+protein_nterm_res: 10 # set to -1 to start at the first residue
+protein_cterm_res: 316 # set to -1 to include up to the final residue 
+protein_copies: 1
 experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv
 n_contacts: 3
 n_weighted_contacts: 3
@@ -134,7 +133,7 @@ WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be sto
 nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
 ```
 
-After the job is completed you should see output like this:
+Assuming you have access to GPUs, this should take ~half an hour. After the job is completed you should see output like this:
 ```bash
 (fragfold) user@d-19-1-1:/state/partition1/user/user$ nextflow run ${NEXTFLOWDIR}/ftsZ_homomeric_example.nf -w $WORKDIR -resume
 N E X T F L O W  ~  version 23.10.1
@@ -149,7 +148,7 @@ executor >  slurm (1)
 
 To inspect the output of intermediate steps, use the names of the processes to find the directory. For example to find output from colabfold, go to `/home/gridsan/user/FragFold/nextflow/practice/66/32bf2a*`.
 
-The final output csv (`*_colabfold_predictions.csv`) is copied to the working directory where the nextflow job was submitted.
+The output csvs (colabfold output: `*_results_expmerge.csv`, predicted peaks: `*_predictalphafoldpeaks_*.csv`) are copied to the working directory where the nextflow job was submitted. Note that there is more output contained in the directories, including plots of the weighted contacts by fragment position.
 
 ### A note on file systems and NextFlow compatibility
 
