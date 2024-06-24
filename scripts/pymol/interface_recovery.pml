@@ -1,5 +1,5 @@
 import sys
-sys.path.append("/Users/sebastianswanson/Keating/utilities/repos/inhibitory_fragments_structure_prediction/inhib_frag_pred/pymol_scripts")
+sys.path.append("/tmp/sshfs_sup/swans/savinovCollaboration/FragFold/scripts/pymol")
 from helpers import string2sel,drawContact
 
 # Define variables

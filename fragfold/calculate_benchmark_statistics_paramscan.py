@@ -35,8 +35,8 @@ benchmark_conditions = {
 
 def filterLengthsByGene(df):
     # separate function so that it can be easily identified/modified for future iterations where things change
-    filt_df = df[(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==14)|
-                 ~(df['gene']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==30)]
+    filt_df = df[(df['fragment_parent_name']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==14)|
+                 ~(df['fragment_parent_name']=='lptG-coding-EcoliBL21DE3')&(df['fragment_length_aa']==30)]
     print(f"There are {len(df)} peaks in the original df and {len(filt_df)} after filtering by lengths")
     return filt_df
 
@@ -46,9 +46,9 @@ def main(args):
     # Load experimental data and filter by benchmark genes
     path = args.exp_peaks_csv
     exp_df = pd.read_csv(path,index_col=0)
-    # exp_df['gene'] = exp_df['gene'].str.replace('rpIL-coding-EcoliBL21DE3','rplL-coding-EcoliBL21DE3') # fix misnamed gene
-    # filt_exp_df = filterLengthsByGene(exp_df[(exp_df['gene'].isin(benchmark_genes))]).copy(deep=True)
-    filt_exp_df = exp_df[(exp_df['gene'].isin(benchmark_genes))]
+    # exp_df['fragment_parent_name'] = exp_df['fragment_parent_name'].str.replace('rpIL-coding-EcoliBL21DE3','rplL-coding-EcoliBL21DE3') # fix misnamed gene
+    # filt_exp_df = filterLengthsByGene(exp_df[(exp_df['fragment_parent_name'].isin(benchmark_genes))]).copy(deep=True)
+    filt_exp_df = exp_df[(exp_df['fragment_parent_name'].isin(benchmark_genes))]
     filt_exp_df = filterLengthsByGene(filt_exp_df).copy(deep=True)
     if (args.batch_id == 0):
         filt_exp_df.to_csv("filtered_experimental_peaks.csv")
@@ -63,7 +63,7 @@ def main(args):
     curated_found = set()
     peak_type = []
     for i,row in filt_exp_df.iterrows():
-        gene = row['gene'].split('-')[0]
+        gene = row['fragment_parent_name'].split('-')[0]
         peak_start = row['peak region first fragment_center_aa']
         peak_end = row['peak region last fragment_center_aa']
         filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
@@ -83,7 +83,7 @@ def main(args):
     # Load predicted peaks and filter by benchmark genes and conditions
     path = args.pred_peaks_csv
     pred_df = pd.read_csv(path,index_col=0)
-    filt_pred_df = filterLengthsByGene(pred_df[(pred_df['gene'].isin(benchmark_genes))&(pred_df['condition'].isin(benchmark_conditions))]).copy(deep=True)
+    filt_pred_df = filterLengthsByGene(pred_df[(pred_df['fragment_parent_name'].isin(benchmark_genes))&(pred_df['protein_name'].isin(benchmark_conditions))]).copy(deep=True)
     filt_pred_df.to_csv(f"filtered_predicted_peaks_batch{args.batch_id}.csv")
     print(f"There are {len(pred_df)} peaks in the original predicted peaks data and {len(filt_pred_df)} after filtering for predicted peaks in the benchmark")
 

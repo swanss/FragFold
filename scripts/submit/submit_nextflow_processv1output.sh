@@ -11,6 +11,7 @@ ENV=fragfold3
 WORKFLOW=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/process_v1_output.nf
 NF_CFG=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/nextflow.config
 WORK_DIR=$(pwd -P)
+LOGS=${WORK_DIR}/nextflow_logs
 
 # Go to a tmp dir
 USER=$(whoami) && cd $TMPDIR

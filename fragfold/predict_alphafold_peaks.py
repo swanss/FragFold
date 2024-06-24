@@ -37,31 +37,31 @@ def loadParamsSetFromJSON(path,verbose=True):
     iptm_scan = np.linspace(params_dict['iptm']['start'],
                             params_dict['iptm']['stop'],
                             params_dict['iptm']['n'])
-    contactsimcutoff_scan = np.linspace(params_dict['cluster_dist_cutoff']['start'],
+    contactdistancecutoff_scan = np.linspace(params_dict['cluster_dist_cutoff']['start'],
                                         params_dict['cluster_dist_cutoff']['stop'],
                                         params_dict['cluster_dist_cutoff']['n'])
 
     print(f"ncontacts: {ncontacts_scan}")
     print(f"weighted_contacts: {nwcontacts_scan}")
     print(f"iptm: {iptm_scan}")
-    print(f"cluster_dist_cutoff: {contactsimcutoff_scan}")
-    allparams_scan = list(itertools.product(ncontacts_scan,nwcontacts_scan,iptm_scan,contactsimcutoff_scan))
+    print(f"cluster_dist_cutoff: {contactdistancecutoff_scan}")
+    allparams_scan = list(itertools.product(ncontacts_scan,nwcontacts_scan,iptm_scan,contactdistancecutoff_scan))
     print(f"{len(allparams_scan)} total parameter conditions")
     return allparams_scan
 
-def createName(n_contacts,n_wcontacts,iptm,contactsimcutoff):
-    return f"ncontacts{n_contacts}_nwcontacts{n_wcontacts}_iptm{iptm:.2f}_contactdist{contactsimcutoff:.2f}"
+def createName(n_contacts,n_wcontacts,iptm,contactdistancecutoff):
+    return f"ncontacts{n_contacts}_nwcontacts{n_wcontacts}_iptm{iptm:.2f}_contactdist{contactdistancecutoff:.2f}"
 
 def clusterWithParams(params:tuple,pred_df:pd.DataFrame,outdir=''):
-    n_contacts,n_wcontacts,iptm,contactsimcutoff = params[0],params[1],params[2],params[3]
-    print(f"Cluster with parameters: n_contacts = {n_contacts}, n_weighted_contacts = {n_wcontacts}, iptm = {iptm}, cluster contact cutoff = {contactsimcutoff}")
-    # print(n_contacts,n_wcontacts,iptm,contactsimcutoff)
+    n_contacts,n_wcontacts,iptm,contactdistancecutoff = params[0],params[1],params[2],params[3]
+    print(f"Cluster with parameters: n_contacts = {n_contacts}, n_weighted_contacts = {n_wcontacts}, iptm = {iptm}, cluster contact cutoff = {contactdistancecutoff}")
+    # print(n_contacts,n_wcontacts,iptm,contactdistancecutoff)
     # Filter all fragments
     filt_pred_df = filterAlphaFoldPredictions(pred_df,n_contacts,n_wcontacts,iptm,True)
     if len(filt_pred_df) == 0:
         return None
 
-    paramsname = createName(n_contacts,n_wcontacts,iptm,contactsimcutoff)
+    paramsname = createName(n_contacts,n_wcontacts,iptm,contactdistancecutoff)
     dirname = os.path.join(outdir,paramsname)
     pathlib.Path(dirname).mkdir(exist_ok=True)
 
@@ -78,10 +78,10 @@ def clusterWithParams(params:tuple,pred_df:pd.DataFrame,outdir=''):
 
         # Cluster each set
         grouped_clusters_list = []
-        for contign,single_contig_df in contigs_df.groupby('fragment contig'):
-            cluster_df = clusterOverlappingFragments(single_contig_df,contactsimcutoff,'',False)
-            cluster_df['fragment contig'] = contign
-            cluster_df['full_cluster_name'] = cluster_df['fragment contig'].astype(str) + '_' + cluster_df['cluster'].astype(str)
+        for contign,single_contig_df in contigs_df.groupby('fragment_contig'):
+            cluster_df = clusterOverlappingFragments(single_contig_df,contactdistancecutoff,'',False)
+            cluster_df['fragment_contig'] = contign
+            cluster_df['full_cluster_name'] = cluster_df['fragment_contig'].astype(str) + '_' + cluster_df['cluster'].astype(str)
 
             df_list.append(cluster_df)
             grouped_clusters_list.append(cluster_df.copy(deep=True))
@@ -105,7 +105,7 @@ def clusterWithParams(params:tuple,pred_df:pd.DataFrame,outdir=''):
         comb_df['n_contacts_cutoff'] = n_contacts
         comb_df['n_weighted_contacts_cutoff'] = n_wcontacts
         comb_df['iptm_cutoff'] = iptm
-        comb_df['contact_distance_cutoff'] = contactsimcutoff
+        comb_df['contact_distance_cutoff'] = contactdistancecutoff
         print(f"Found {len(comb_df)} clusters")
         return comb_df
     else:
@@ -131,8 +131,11 @@ def singleParamSet(args):
     if isinstance(comb_df,pd.DataFrame):
         comb_df.to_csv(f"predictalphafoldpeaks_{name}.csv")
         if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
+            print(f"Dataframe has {len(comb_df)} peaks. Filtering out peaks with size < {args.min_cluster_size_merging}")
+            filt_comb_df = comb_df[comb_df['cluster_n_fragments']>=args.min_cluster_size_merging].copy(deep=True)
+            print(f"After filtering, {len(filt_comb_df)} peaks remain")
             print("Merging overlapping peaks...")
-            clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+            clus_filt_pred_df = clusterPeaksByOverlap(filt_comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
             print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
             clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
     else:
@@ -187,7 +190,9 @@ def paramScan(args):
 
     if args.cluster_peaks_frac_overlap > 0.0 and args.cluster_peaks_frac_overlap < 1.0:
         print("Merging overlapping peaks...")
-        clus_filt_pred_df = clusterPeaksByOverlap(comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+        print(f"Dataframe has {len(comb_df)} peaks. Filtering out peaks with size < {args.min_cluster_size_merging}")
+        filt_comb_df = comb_df[comb_df['cluster_n_fragments']>=args.min_cluster_size_merging].copy(deep=True)
+        clus_filt_pred_df = clusterPeaksByOverlap(filt_comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
         print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
         clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_paramscan_batch{args.batch_id}.csv")
 
@@ -260,7 +265,10 @@ if __name__ == "__main__":
     parser.add_argument('--contact_distance',type=float)
     parser.add_argument('--paramscan_json',type=str)
     parser.add_argument('--colabfold_data_csv',type=str)
-    parser.add_argument('--cluster_peaks_frac_overlap',type=float,default=1.0)
+    parser.add_argument('--min_cluster_size_merging',type=int,default=6,
+                        help='Clusters with less than this many fragments (`cluster_n_fragments`) will not be considered for merging')
+    parser.add_argument('--cluster_peaks_frac_overlap',type=float,default=0.7,
+                        help='Clusters with at least this much residue overlap will be merged')
     parser.add_argument('--verbose',action='store_true')
 
     args = parser.parse_args()
