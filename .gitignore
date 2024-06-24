@@ -6,7 +6,10 @@ nextflow/practice_scripts
 example*
 test*
 data
+results
 old
+*old*
+*/analysis/pnas_resubmission
 input/gene_fasta_original
 
 # Byte-compiled / optimized / DLL files
