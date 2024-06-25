@@ -739,5 +739,9 @@ def clusterPeaksByOverlap(peak_df,
     for group_variables,group_df in peak_df.groupby(group_vals,dropna=False):
         print(f"Group predicted peaks by {group_variables}")
         cluster_df_list.append(clusterPeaksByOverlapGroupedDF(group_df,frac_overlap,verbose))
-    cluster_df = pd.concat(cluster_df_list,ignore_index=True)
-    return cluster_df
+    if len(cluster_df_list) > 0:
+        cluster_df = pd.concat(cluster_df_list,ignore_index=True)
+        return cluster_df
+    else:
+        print("No peaks after filtering/merging")
+        return None
