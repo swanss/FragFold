@@ -132,12 +132,12 @@ NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow 
 WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be stored
 NF_CFG=${NEXTFLOWDIR}/nextflow.config
 PARAMS=${NEXTFLOWDIR}/params/ftsZ_monomeric_example.yaml
-nextflow run ${NEXTFLOWDIR}/main.nf -w $WORK_DIR -c $NF_CFG -params-file $PARAMS -resume
+nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -c $NF_CFG -params-file $PARAMS -resume
 ```
 
 Assuming you have access to GPUs, this should take ~half an hour. After the job is completed you should see output like this:
 ```bash
-(fragfold) user@d-19-1-1:/state/partition1/user/user$ nextflow run ${NEXTFLOWDIR}/main.nf -w $WORK_DIR -c $NF_CFG -params-file $PARAMS -resume
+(fragfold) user@d-19-1-1:/state/partition1/user/user$ nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -c $NF_CFG -params-file $PARAMS -resume
 N E X T F L O W  ~  version 23.10.1
 Launching `/home/gridsan/user/keatinglab_shared/user/savinovCollaboration/FragFold/nextflow/ftsZ_homomeric_example.nf` [tiny_agnesi] DSL2 - revision: f2c61140f9
 executor >  slurm (1)
@@ -168,7 +168,7 @@ NEXTFLOWDIR=/home/gridsan/user/FragFold/nextflow #directory containing nextflow 
 WORKDIR=/home/gridsan/user/FragFold/example #directory where results will be stored
 NF_CFG=${NEXTFLOWDIR}/nextflow.config
 PARAMS=${NEXTFLOWDIR}/params/ftsZ_monomeric_example.yaml
-nextflow run ${NEXTFLOWDIR}/main.nf -w $WORK_DIR -c $NF_CFG -params-file $PARAMS -resume
+nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -c $NF_CFG -params-file $PARAMS -resume
 ```
 
 ### Submitting nextflow as a job for large colabfold jobs
