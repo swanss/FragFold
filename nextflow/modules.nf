@@ -2,7 +2,7 @@
 // Define each process
 process build_msa {
     label 'cpu_network'
-    // cache 'lenient'
+    cache 'lenient'
 
     input:
         path query_seq
@@ -21,7 +21,7 @@ process build_msa {
 
 process process_msa {
     label 'cpu'
-    // cache 'lenient'
+    cache 'lenient'
 
     input:
         path a3m
@@ -52,7 +52,7 @@ process process_msa {
 
 process colabfold {
     label 'gpu'
-    // cache 'lenient'
+    cache 'lenient'
 
     input:
         path a3m_concat
@@ -73,7 +73,7 @@ process colabfold {
 
 process create_summary_csv {
     label 'cpu'
-    // cache 'lenient'
+    cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
 
     input:
@@ -101,7 +101,7 @@ process create_summary_csv {
 
 process create_summary_csv_fromjson {
     label 'cpu'
-    // cache 'lenient'
+    cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
 
     input:
@@ -123,7 +123,7 @@ process create_summary_csv_fromjson {
 
 process predict_peaks {
     label 'cpu_small'
-    // cache 'lenient'
+    cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
 
     input:

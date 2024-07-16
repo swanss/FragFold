@@ -30,38 +30,45 @@ def main(args):
     # Load experimental data and filter by benchmark genes
     path = args.exp_peaks_csv
     exp_df = pd.read_csv(path,index_col=0)
-    # exp_df['gene'] = exp_df['gene'].str.replace('rpIL-coding-EcoliBL21DE3','rplL-coding-EcoliBL21DE3') # fix misnamed gene
-    # filt_exp_df = filterLengthsByGene(exp_df[(exp_df['gene'].isin(benchmark_genes))]).copy(deep=True)
-    filt_exp_df = exp_df[(exp_df['gene'].isin(benchmark_genes))]
-    filt_exp_df = filterLengthsByGene(filt_exp_df).copy(deep=True)
-    if (args.store_intermediate):
-        filt_exp_df.to_csv("filtered_experimental_peaks.csv")
-    print(f"There are {len(exp_df)} peaks in the original experimental data and {len(filt_exp_df)} after filtering for genes in the benchmark")
 
-    # Label peaks with experimental structures as "known"
-    path = args.exp_peaks_known_csv
-    andrew_df = pd.read_csv(path)
-    print(f"There are {len(andrew_df)} peaks in the curated set")
+    if args.filter_genes_to_benchmark:
+        # Filter based on predetermined set of genes
+        filt_exp_df = exp_df[(exp_df['gene'].isin(benchmark_genes))]
+        filt_exp_df = filterLengthsByGene(filt_exp_df).copy(deep=True)
+        if (args.store_intermediate):
+            filt_exp_df.to_csv("filtered_experimental_peaks.csv")
+        print(f"There are {len(exp_df)} peaks in the original experimental data and {len(filt_exp_df)} after filtering for genes in the benchmark")
+    else:
+        # Assume the dataset is already properly filtered
+        filt_exp_df = exp_df
 
-    # Go through the experimental peaks df and check if each peak is similar to one already in the curated set
-    curated_found = set()
-    peak_type = []
-    for i,row in filt_exp_df.iterrows():
-        gene = row['gene'].split('-')[0]
-        peak_start = row['peak region first fragment_center_aa']
-        peak_end = row['peak region last fragment_center_aa']
-        filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
-                            (andrew_df['protein-protein interaction inhibitory peak center (aa)']>=peak_start)&
-                            (andrew_df['protein-protein interaction inhibitory peak center (aa)']<=peak_end)]
-        if len(filt_df) > 0:
-            print("Fragment is in curated set")
-            for x in filt_df.index:
-                curated_found.add(int(x))
-            peak_type.append('known')
-        else:
-            peak_type.append('novel')
-    filt_exp_df['peak type'] = peak_type
-    print(f"{filt_exp_df.groupby('peak type').size()} of the filtered experimental peaks are known")
+    if args.exp_peaks_known_csv != "":
+        # Label peaks with experimental structures as "known"
+        path = args.exp_peaks_known_csv
+        andrew_df = pd.read_csv(path)
+        print(f"There are {len(andrew_df)} peaks in the curated set")
+
+        # Go through the experimental peaks df and check if each peak is similar to one already in the curated set
+        curated_found = set()
+        peak_type = []
+        for i,row in filt_exp_df.iterrows():
+            gene = row['gene'].split('-')[0]
+            peak_start = row['peak region first fragment_center_aa']
+            peak_end = row['peak region last fragment_center_aa']
+            filt_df = andrew_df[(andrew_df['protein-coding gene']==gene)&
+                                (andrew_df['protein-protein interaction inhibitory peak center (aa)']>=peak_start)&
+                                (andrew_df['protein-protein interaction inhibitory peak center (aa)']<=peak_end)]
+            if len(filt_df) > 0:
+                print("Fragment is in curated set")
+                for x in filt_df.index:
+                    curated_found.add(int(x))
+                peak_type.append('known')
+            else:
+                peak_type.append('novel')
+        filt_exp_df['peak_type'] = peak_type
+        print(f"{filt_exp_df.groupby('peak_type').size()} of the filtered experimental peaks are known")
+    else:
+        filt_exp_df['peak_type'] = 'novel'
 
     ### PRED peaks
     # Load predicted peaks and filter by benchmark genes and conditions
@@ -124,7 +131,8 @@ if __name__ == "__main__":
         description = 'Script for calculating benchmark statistics given clustering results for a single set of parameters with randomized predicted peak positions')
     parser.add_argument('--pred_peaks_csv',type=str,required=True)
     parser.add_argument('--exp_peaks_csv',type=str,required=True)
-    parser.add_argument('--exp_peaks_known_csv',type=str,required=True)
+    parser.add_argument('--exp_peaks_known_csv',type=str,required=False,default='')
+    parser.add_argument('--filter_genes_to_benchmark',action='store_true')
     parser.add_argument('--store_intermediate',action='store_true')
     parser.add_argument('--by_gene',action='store_true')
     # parser.add_argument('--min_cluster_size_',type=int,default=6,

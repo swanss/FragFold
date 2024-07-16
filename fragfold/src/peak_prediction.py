@@ -157,6 +157,33 @@ def peakScoreLocal(val,left_vals,right_vals):
 #     print(scores)
     return np.mean(scores)
 
+def zscoreCutoff(filt_df,inhibeffectcutoff=-2.0,zscore=-2.5):
+    filt_df = filt_df[filt_df['inhibitory_effect_enrichment']>inhibeffectcutoff]
+    print(f"mean: {filt_df['inhibitory_effect_enrichment'].mean()}")
+    print(f"std: {filt_df['inhibitory_effect_enrichment'].std()}")
+    return filt_df['inhibitory_effect_enrichment'].mean() + zscore*filt_df['inhibitory_effect_enrichment'].std()
+
+def plotExpPeaks(gene,exp_df,peak_df,inhib_effect_cutoff,save=True,dirname=""):
+    plt.clf()
+    
+    ax = sns.lineplot(data=exp_df,x='fragment_center_aa',y='inhibitory_effect_enrichment',alpha=.75)
+    ax.axhline(inhib_effect_cutoff,c='r',ls='--')
+
+    plt.hlines(peak_df['peak_fragment_score'],peak_df['peak_region_first_fragment_center_aa'],peak_df['peak_region_last_fragment_center_aa'],
+              colors='g')
+
+    fcenter = peak_df['fragment_center_aa']
+    wcontacts = peak_df['peak_fragment_score']
+    ax = sns.scatterplot(x=fcenter,y=wcontacts,color='r')
+    ax.set_title(gene)
+    
+    filename = f"{gene}_experimentalpeaks.png" if dirname == "" else f"{dirname}/{gene}_experimentalpeaks.png"
+    if save:
+        plt.savefig(filename,dpi=300)
+    
+    plt.show()
+
+
 ### Functions for predicting peaks using AlphaFold
 
 def filterAlphaFoldPredictions(pred_df: pd.DataFrame,
@@ -497,8 +524,8 @@ def calculateBenchmarkStatistics(overlap_df,
     if byGene:
         nExpPeaks_byGene_df = exp_df.groupby('fragment_parent_name').size().reset_index()
         nExpPeaks_byGene = dict(zip(nExpPeaks_byGene_df['fragment_parent_name'],nExpPeaks_byGene_df[0]))
-        nExpKnownPeaks_byGene_df = exp_df[exp_df['peak_type']=='known'].groupby('fragment_parent_name').size().reset_index()
-        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['fragment_parent_name'],nExpKnownPeaks_byGene_df[0]))
+        nExpKnownPeaks_byGene_df = exp_df.groupby('fragment_parent_name',group_keys=True).apply(lambda x: len(x[x['peak_type']=='known']),include_groups=False).reset_index(name='size')
+        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['fragment_parent_name'],nExpKnownPeaks_byGene_df['size']))
 
         nExpPeaks_list = []
         nExpKnownPeaks_list = []
@@ -570,7 +597,7 @@ def calculateBenchmarkStatistics(overlap_df,
                                 'min_cluster_size':minClusterSize_list,
                                 'overlap_frac_req':resOverlapFrac_list,
                                 'n_exp_peaks':nExpPeaks_list,
-                                '# pred peaks':ntotalpredpeaks_list,
+                                'n_pred_peaks':ntotalpredpeaks_list,
                                 'n_overlap_exp_peaks':noverlapexppeaks_list,
                                 'n_overlap_pred_peaks':noverlappredpeaks_list,
                                 'n_known_exp_peaks':nExpKnownPeaks_list,
