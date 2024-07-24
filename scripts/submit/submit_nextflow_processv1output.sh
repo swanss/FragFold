@@ -7,7 +7,7 @@
 #SBATCH --partition=xeon-p8
 #SBATCH --output=nf-fragfold.%j.log
 
-ENV=fragfold3
+ENV=fragfold5
 WORKFLOW=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/process_v1_output.nf
 NF_CFG=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/nextflow.config
 WORK_DIR=$(pwd -P)

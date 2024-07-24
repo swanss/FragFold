@@ -301,7 +301,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
     pred_clusrep_df['cluster_first_fragment_center_aa'] = first_fragment_center
     pred_clusrep_df['cluster_last_fragment_center_aa'] = last_fragment_center
     pred_clusrep_df['cluster_member_idx'] = cluster_member_idx_list
-    pred_clusrep_df.drop(columns=['contact_set'],inplace=True)
+    # pred_clusrep_df.drop(columns=['contact_set'],inplace=True)
 
     return pred_clusrep_df
 
@@ -655,7 +655,8 @@ def mergeAllPeaks(peak_list):
         'n_contacts_cutoff':rep_fragment['n_contacts_cutoff'],
         'n_weighted_contacts_cutoff':rep_fragment['n_weighted_contacts_cutoff'],
         'iptm_cutoff':rep_fragment['iptm_cutoff'],
-        'contact_distance_cutoff':rep_fragment['contact_distance_cutoff']
+        'contact_distance_cutoff':rep_fragment['contact_distance_cutoff'],
+        'contact_set':rep_fragment['contact_set']
     }
     return result
 

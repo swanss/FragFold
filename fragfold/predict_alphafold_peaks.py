@@ -136,7 +136,7 @@ def singleParamSet(args):
             print(f"After filtering, {len(filt_comb_df)} peaks remain")
             print("Merging overlapping peaks...")
             clus_filt_pred_df = clusterPeaksByOverlap(filt_comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
-            if clus_filt_pred_df:
+            if len(clus_filt_pred_df)>0:
                 print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
                 clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
     else:
