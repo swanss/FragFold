@@ -27,13 +27,14 @@ workflow {
                         protein_name,
                         fragment_parent_name,
                         params.experimental_data,
-                        params.job_name)
+                        params.job_name,
+                        params.contact_distance_cutoff)
         predict_peaks(create_summary_csv.out.csv,
                       params.job_name,
                       params.n_contacts,
                       params.n_weighted_contacts,
                       params.iptm,
-                      params.contact_distance,
+                      params.contact_distance_cluster_cutoff,
                       params.cluster_peaks_frac_overlap)
     } else {
         build_msa(file(params.protein_query_seq),true)
@@ -53,13 +54,14 @@ workflow {
                            protein_name,
                            protein_name,
                            params.experimental_data,
-                           params.job_name)
+                           params.job_name,
+                           params.contact_distance_cutoff)
         predict_peaks(create_summary_csv.out.csv,
                       params.job_name,
                       params.n_contacts,
                       params.n_weighted_contacts,
                       params.iptm,
-                      params.contact_distance,
+                      params.contact_distance_cluster_cutoff,
                       params.cluster_peaks_frac_overlap)
     }
 }

@@ -20,8 +20,9 @@ maintainers = [
 ]
 dependencies = [
   "biopython",
+  "freesasa",
   "jupyter",
-  "numpy",
+  "numpy<=2.0.0",
   "pandas",
   "scipy",
   "seaborn",

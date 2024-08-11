@@ -83,6 +83,7 @@ process create_summary_csv {
         val fragment_parent_name
         path experimental_data
         val output_name
+        val contact_distance_cutoff
 
     output:
         path 'results_expmerge.csv', emit: csv
@@ -95,6 +96,7 @@ process create_summary_csv {
         --full_protein !{protein_name} \
         --fragment_protein !{fragment_parent_name} \
         --experimental_data !{experimental_data} \
+        --contact_distance_cutoff !{contact_distance_cutoff} \
         --generate_plots
     '''
 }
@@ -108,6 +110,7 @@ process create_summary_csv_fromjson {
         path json_file
         path experimental_data
         val output_name
+        val contact_distance_cutoff
 
     output:
         path 'results_expmerge.csv', emit: csv
@@ -117,6 +120,7 @@ process create_summary_csv_fromjson {
     python !{repo_dir}/fragfold/colabfold_process_output.py \
         --import_json !{json_file} \
         --experimental_data !{experimental_data} \
+        --contact_distance_cutoff !{contact_distance_cutoff} \
         --generate_plots
     '''
 }
@@ -132,7 +136,7 @@ process predict_peaks {
         val n_contacts
         val n_weighted_contacts
         val iptm
-        val contact_distance
+        val contact_distance_cluster_cutoff
         val cluster_peaks_frac_overlap
 
     output:
@@ -145,7 +149,7 @@ process predict_peaks {
         --n_contacts !{n_contacts} \
         --n_weighted_contacts !{n_weighted_contacts} \
         --iptm !{iptm} \
-        --contact_distance !{contact_distance} \
+        --contact_distance_cluster_cutoff !{contact_distance_cluster_cutoff} \
         --cluster_peaks_frac_overlap !{cluster_peaks_frac_overlap} \
         --verbose
     '''

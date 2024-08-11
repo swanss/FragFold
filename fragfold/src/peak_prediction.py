@@ -243,7 +243,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
     contacts_list = []
     for i,row in pred_df_copy.iterrows():
         s_extract = parser.get_structure("s", row['path'])
-        fixResidueNumbers(s_extract[0]['B'],row['fragment_start_aa'])
+        fixResidueNumbers(s_extract[0][row['fragment_chain']],row['fragment_start_aa'])
         protein_chains = set(row['protein_chains'].split(','))
         fragment_chain = set(row['fragment_chain'])
         contacts_residues = getInterfaceContactsFromStructure(s_extract,protein_chains,fragment_chain,4.0)
@@ -436,6 +436,32 @@ def getResidueOverlapReq(fragmentLength,residueOverlapFrac):
 # residue_overlap_frac = float(2/3)
 # residue_overlap_req = getResidueOverlapReq(fragment_length,residue_overlap_frac)
 # print(residue_overlap_req)
+
+def findOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_fraction=(2/3)):
+    pred_df_copy = pred_df.copy(deep=True)
+    exp_df_copy = exp_df.copy(deep=True)
+
+    pred_peak_overlap = [False]*len(pred_df)
+    exp_peak_overlap = [False]*len(exp_df)
+    
+    for i,(_,exp_peak) in enumerate(exp_df.iterrows()):
+        res_overlap = getResidueOverlapReq(exp_peak['fragment_length_aa'],residue_overlap_fraction)
+        for j,(_,pred_peak) in enumerate(pred_df.iterrows()):
+            # print(exp_peak['peak_region_first_fragment_center_aa'],exp_peak['peak_region_last_fragment_center_aa'])
+
+            # if the peaks come from different genes, or different lengths, they can't overlap
+            if (exp_peak['fragment_parent_name'] != pred_peak['fragment_parent_name']) or (exp_peak['fragment_length_aa'] != pred_peak['fragment_length_aa']):
+                continue
+            overlap = rangeOverlap(exp_peak['peak_region_first_fragment_center_aa'],exp_peak['peak_region_last_fragment_center_aa'],
+                                        pred_peak['cluster_first_fragment_center_aa'],pred_peak['cluster_last_fragment_center_aa'],
+                                        exp_peak['fragment_length_aa'],res_overlap)
+            if overlap:
+                exp_peak_overlap[i] = True
+                pred_peak_overlap[j] = True
+
+    pred_df_copy['overlap'] = pred_peak_overlap
+    exp_df_copy['overlap'] = exp_peak_overlap
+    return pred_df_copy,exp_df_copy
 
 def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     # lists for storing data
@@ -655,7 +681,7 @@ def mergeAllPeaks(peak_list):
         'n_contacts_cutoff':rep_fragment['n_contacts_cutoff'],
         'n_weighted_contacts_cutoff':rep_fragment['n_weighted_contacts_cutoff'],
         'iptm_cutoff':rep_fragment['iptm_cutoff'],
-        'contact_distance_cutoff':rep_fragment['contact_distance_cutoff'],
+        'contact_distance_cluster_cutoff':rep_fragment['contact_distance_cluster_cutoff'],
         'contact_set':rep_fragment['contact_set']
     }
     return result
