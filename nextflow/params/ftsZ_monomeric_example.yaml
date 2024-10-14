@@ -7,9 +7,11 @@ fragment_length: 30
 protein_nterm_res: 10
 protein_cterm_res: 316
 protein_copies: 1
+# experimental_data: /data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/assets/NO_FILE # use this file if you don't have any experimental data
 experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv
 n_contacts: 3
 n_weighted_contacts: 3
 iptm: 0.3
-contact_distance: 0.4
+contact_distance_cutoff: 0.35
+contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7

@@ -235,9 +235,7 @@ def main(args):
     print(f"Combined dataframe with {len(comb_df)} rows")
 
     # Merge with experimental data df 
-    comb_df.to_csv("colabfold_predictions.csv")
-    print(f"Dataframe with {len(comb_df)} entries total")
-    # confidence_df.to_csv("colabfold_predictions.csv")
+
 
     # If experimental dataframe is provided, merge now
     if experimental_data_path != "":
@@ -247,7 +245,10 @@ def main(args):
         # dataframe contains some replicated measurements (they are generally similar, so arbitrarily take the first)
         exp_df = exp_df.drop_duplicates(subset=merge_on_list)
         merge_df = comb_df.merge(exp_df,how='left',on=merge_on_list,validate='many_to_one')
-        merge_df.to_csv(f"results_expmerge.csv")
+        merge_df.to_csv("colabfold_predictions.csv")
+    else:
+        comb_df.to_csv("colabfold_predictions.csv")
+        print(f"Dataframe with {len(comb_df)} entries total")
 
     if args.generate_plots:
         for groupers,group_df in comb_df.groupby(['fragment_parent_name','protein_name','fragment_length_aa','description']):

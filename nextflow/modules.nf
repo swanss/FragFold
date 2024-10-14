@@ -86,18 +86,23 @@ process create_summary_csv {
         val contact_distance_cutoff
 
     output:
-        path 'results_expmerge.csv', emit: csv
+        path 'colabfold_predictions.csv', emit: csv
 
+    script:
     shell:
     '''
+    exp_data=!{experimental_data}
+    filename=$(basename -- "$exp_data")
+    EXP_DATA_ARG=""
+    if [[ $filename != "NO_FILE" ]]; then EXP_DATA_ARG="--experimental_data "$exp_data; fi
     python !{repo_dir}/fragfold/colabfold_process_output.py \
         --predicted_pdbs !{pdb_file} \
         --confidence_logs log_file_*.txt \
         --full_protein !{protein_name} \
         --fragment_protein !{fragment_parent_name} \
-        --experimental_data !{experimental_data} \
         --contact_distance_cutoff !{contact_distance_cutoff} \
-        --generate_plots
+        --generate_plots \
+        $EXP_DATA_ARG
     '''
 }
 
@@ -113,7 +118,7 @@ process create_summary_csv_fromjson {
         val contact_distance_cutoff
 
     output:
-        path 'results_expmerge.csv', emit: csv
+        path 'colabfold_predictions.csv', emit: csv
 
     shell:
     '''
