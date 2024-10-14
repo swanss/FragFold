@@ -124,6 +124,12 @@ contact_distance: 0.4
 cluster_peaks_frac_overlap: 0.7
 ```
 
+Note: if you don't have any experimental data corresponding to the fragments, set the path to `nextflow/assets/NO_FILE`.
+
+```yaml
+experimental_data: /data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/assets/NO_FILE
+```
+
 ### Running nextflow.
 
 Run nextflow with the following command:
