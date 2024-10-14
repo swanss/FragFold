@@ -179,4 +179,4 @@ nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -c $NF_CFG -params-file $PARAMS 
 
 ### Submitting nextflow as a job for large colabfold jobs
 
-For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports `-resume` by copying the task metadata files. To get it running your HPC, you will need to edit the slurm directives and paths.
+For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports `-resume` by copying the task metadata files. To get it running on your HPC, you will need to edit the slurm directives and paths.
