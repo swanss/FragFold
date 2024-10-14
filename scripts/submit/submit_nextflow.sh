@@ -8,7 +8,7 @@
 #SBATCH --output=nf-fragfold.%j.log
 #SBATCH --signal=B:USR1@600
 
-ENV=fragfold3
+ENV=fragfold
 WORKFLOW=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/main.nf
 NF_CFG=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/nextflow.config
 PARAMS=/data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/params/ftsZ_monomeric_example.yaml
