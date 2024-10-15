@@ -196,7 +196,7 @@ def verifyProteinRange(protein_range,protein_n_res):
        (protein_range[1] > protein_n_res):
         raise ValueError(f"Provided protein residue range: ({protein_range[0]},{protein_range[1]}) is invalid")
         
-def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,fragment_tile_step,protein_copies=1):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
     
     Args
@@ -211,6 +211,8 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
         an inclusive range defining the range of starting residues for fragments of length `fragment_length`
     fragment_length : int
         the number of residues to take when defining a fragment
+    fragment_tile_step : int
+        the number of residues to step when generating fragments
     '''
     print("Generating MSAs for a monomeric interaction...")
 
@@ -227,7 +229,7 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
 
-    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2))
+    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2),fragment_tile_step)
     with Pool() as p:
         a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragment_starmap,[(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
 
@@ -241,7 +243,7 @@ def createIndividualMSAsFullLengthFragment_starmap(a3m_path,fragment_start,fragm
     createMSA(a3m_path, protein_range, fragment_range, -1, abs_a3m_out_path, protein_copies)
     return abs_a3m_out_path
         
-def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,fragment_tile_step,protein_copies=1):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
     
     Args
@@ -258,6 +260,8 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
         an inclusive range defining the range of starting residues for fragments of length `fragment_length`
     fragment_length : int
         the number of residues to take when defining a fragment
+    fragment_tile_step : int
+        the number of residues to step when generating fragments
     '''
     print("Generating MSAs for a heteromeric interaction...")
 
@@ -275,7 +279,7 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
     except FileExistsError:
         print('Directory already exists, possibly overwriting existing files')
 
-    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2))
+    fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2),fragment_tile_step)
     with Pool() as p:
         a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragmentHeteromeric_starmap,[(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
 
