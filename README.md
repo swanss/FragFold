@@ -1,9 +1,9 @@
 # Fragment binding prediction with ColabFold
 
-Scripts for predicting how short fragments of natural proteins bind to full-length proteins, as described in the [manuscript](https://www.biorxiv.org/content/10.1101/2023.12.19.572389v1). This program is built on top of MMseqs2 and ColabFold, extending them to efficiently predict interactions between a full-length protein and fragments derived from a protein.
+Scripts for predicting how short fragments of natural proteins bind to full-length proteins, as described in the [manuscript](https://www.biorxiv.org/content/10.1101/2023.12.19.572389v2). This program is built on top of MMseqs2 and ColabFold, extending them to efficiently predict interactions between a full-length protein and fragments derived from a protein.
 
 This code is associated with the following article:
-A. Savinov, S. Swanson, A. E. Keating, G.-W. Li. High-throughput computational discovery of inhibitory protein fragments with AlphaFold. bioRxiv (2023). doi: 10.1101/2023.12.19.572389. https://www.biorxiv.org/content/10.1101/2023.12.19.572389v1
+A. Savinov, S. Swanson, A. E. Keating, G.-W. Li. High-throughput computational discovery of inhibitory protein fragments with AlphaFold. bioRxiv (2023). doi: 10.1101/2023.12.19.572389. https://www.biorxiv.org/content/10.1101/2023.12.19.572389v2
 
 Please cite this article if you make use of FragFold.
 
@@ -121,6 +121,7 @@ n_contacts: 3
 n_weighted_contacts: 3
 iptm: 0.3
 contact_distance: 0.4
+contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7
 ```
 
