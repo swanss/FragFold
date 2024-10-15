@@ -33,7 +33,13 @@ conda run -n $ENV --no-capture-output nextflow run $WORKFLOW -w $WORK_DIR -c $NF
 PID=$!; echo "waiting for PID: "$PID; wait ${PID}
 
 cp -r .nextflow* ${WORK_DIR}/nextflow_logs && \
-    cp *.csv $WORK_DIR && \
-    cp -r --preserve=links colabfold_output $WORK_DIR && \
-    cp -r --preserve=links peakprediction_output $WORK_DIR && \
-    echo 'Finished job and copied files from $TMPDIR'
+    echo 'Finished job'
+
+cp *.csv $WORK_DIR && \
+    echo 'copied csv from $TMPDIR'
+
+cp -r --preserve=links colabfold_output $WORK_DIR && \
+    echo 'copied colabfold files from $TMPDIR'
+
+cp -r --preserve=links peakprediction_output $WORK_DIR && \
+    echo 'copied peakprediction files from $TMPDIR'
