@@ -53,6 +53,7 @@ process process_msa {
 process colabfold {
     label 'gpu'
     cache 'lenient'
+    publishDir "$colabfold_outdir/${a3m_concat.baseName}", mode: 'symlink', overwrite: false
 
     input:
         path a3m_concat
@@ -60,7 +61,8 @@ process colabfold {
     output:
         path 'data/log.txt', emit: log
         path 'data/*_unrelaxed_rank_00?_*.pdb', emit: pdb
-        
+        path 'data/*.png', emit: png
+
     shell:
     '''
     export PATH="!{colabfold_dir}/bin:$PATH"
@@ -74,7 +76,8 @@ process colabfold {
 process create_summary_csv {
     label 'cpu'
     cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
+    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path 'log_file_*.txt'
@@ -87,6 +90,7 @@ process create_summary_csv {
 
     output:
         path 'colabfold_predictions.csv', emit: csv
+        path '*.png', emit: png
 
     script:
     shell:
@@ -109,7 +113,8 @@ process create_summary_csv {
 process create_summary_csv_fromjson {
     label 'cpu'
     cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
+    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path json_file
@@ -119,6 +124,7 @@ process create_summary_csv_fromjson {
 
     output:
         path 'colabfold_predictions.csv', emit: csv
+        path '*.png', emit: png
 
     shell:
     '''
@@ -133,7 +139,8 @@ process create_summary_csv_fromjson {
 process predict_peaks {
     label 'cpu_small'
     cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    publishDir path: "$predictpeaks_outdir", saveAs: { csv -> "${output_name}_${csv}" }, mode: 'symlink', overwrite: false
+    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path csv
@@ -145,7 +152,8 @@ process predict_peaks {
         val cluster_peaks_frac_overlap
 
     output:
-        path '*.csv', optional: true
+        path '*.csv', optional: true, emit: csv
+        path '*.png', optional: true, emit: png
 
     shell:
     '''

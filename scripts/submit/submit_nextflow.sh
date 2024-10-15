@@ -34,4 +34,6 @@ PID=$!; echo "waiting for PID: "$PID; wait ${PID}
 
 cp -r .nextflow* ${WORK_DIR}/nextflow_logs && \
     cp *.csv $WORK_DIR && \
+    cp -r --preserve=links colabfold_output $WORK_DIR && \
+    cp -r --preserve=links peakprediction_output $WORK_DIR && \
     echo 'Finished job and copied files from $TMPDIR'
