@@ -2,7 +2,7 @@ job_name: ftsZ_test
 heteromeric_mode: false
 protein_query_seq: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/gene_fasta/ftsZ_A0A140NFM6.fasta
 fragment_ntermres_start: 260
-fragment_ntermres_final: 264
+fragment_ntermres_final: 265
 fragment_length: 30
 protein_nterm_res: 10
 protein_cterm_res: 316
@@ -12,6 +12,6 @@ experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollabo
 n_contacts: 3
 n_weighted_contacts: 3
 iptm: 0.3
-contact_distance_cutoff: 0.35
+contact_distance_cutoff: 3.5
 contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7

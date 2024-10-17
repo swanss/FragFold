@@ -77,7 +77,7 @@ process create_summary_csv {
     label 'cpu'
     cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
-    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path 'log_file_*.txt'
@@ -114,7 +114,7 @@ process create_summary_csv_fromjson {
     label 'cpu'
     cache 'lenient'
     publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
-    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path json_file
@@ -139,8 +139,8 @@ process create_summary_csv_fromjson {
 process predict_peaks {
     label 'cpu_small'
     cache 'lenient'
-    publishDir path: "$predictpeaks_outdir", saveAs: { csv -> "${output_name}_${csv}" }, mode: 'symlink', overwrite: false
-    publishDir path: "$predictpeaks_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir path: "$peakprediction_outdir", saveAs: { csv -> "${output_name}_${csv}" }, mode: 'symlink', overwrite: false
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
 
     input:
         path csv

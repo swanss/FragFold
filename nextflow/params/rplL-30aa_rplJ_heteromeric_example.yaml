@@ -13,6 +13,6 @@ experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollabo
 n_contacts: 3
 n_weighted_contacts: 0 #relaxed from 3 for this example
 iptm: 0.15 #relaxed from 0.3 for this example
-contact_distance_cutoff: 0.35
+contact_distance_cutoff: 3.5
 contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7

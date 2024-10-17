@@ -233,10 +233,7 @@ def main(args):
     comb_df['weighted_contacts'] = comb_df['n_contacts'] * comb_df['iptm']
     comb_df['fragment_length_aa'] = comb_df['fragment_end_aa'] - comb_df['fragment_start_aa'] + 1
     print(f"Combined dataframe with {len(comb_df)} rows")
-
-    # Merge with experimental data df 
-
-
+    
     # If experimental dataframe is provided, merge now
     if experimental_data_path != "":
         exp_df = pd.read_csv(experimental_data_path)
