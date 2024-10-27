@@ -2,6 +2,8 @@ job_name: rplL-30aa_rplJ_test
 heteromeric_mode: true
 protein_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplJ_A0A140NDB6.fasta
 fragment_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplL_A0A140SS63.fasta
+protein_name: "" # "" if you want to use the fragment_query_seq filename
+fragment_parent_name: rplL-coding-EcoliBL21DE3 # null if you want to use the fragment_query_seq filename
 fragment_ntermres_start: 1
 fragment_ntermres_final: 9
 fragment_length: 30

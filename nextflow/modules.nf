@@ -1,3 +1,11 @@
+def getName(file_path,file_name) {
+    if ( file_name == "" ) {
+        return file(file_path).baseName
+    } else {
+        return file_name
+    }
+}
+
 
 // Define each process
 process build_msa {
@@ -53,20 +61,20 @@ process process_msa {
 process colabfold {
     label 'gpu'
     cache 'lenient'
-    publishDir "$colabfold_outdir/${a3m_concat.baseName}", mode: 'symlink', overwrite: false
+    publishDir "$colabfold_outdir/${a3m_concat.baseName}", overwrite: true
 
     input:
         path a3m_concat
 
     output:
-        path 'data/log.txt', emit: log
-        path 'data/*_unrelaxed_rank_00?_*.pdb', emit: pdb
-        path 'data/*.png', emit: png
+        path 'log.txt', emit: log
+        path '*_unrelaxed_rank_00?_*.pdb', emit: pdb
+        path '*.png', emit: png
 
     shell:
     '''
     export PATH="!{colabfold_dir}/bin:$PATH"
-    colabfold_batch !{a3m_concat} data \
+    colabfold_batch !{a3m_concat} . \
         --data !{alphafold_params_dir} \
         --model-type !{model_type} \
         --pair-mode !{pair_mode}
@@ -76,8 +84,8 @@ process colabfold {
 process create_summary_csv {
     label 'cpu'
     cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
-    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir '.', saveAs: { csv -> "${output_name}__${csv}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', overwrite: true
 
     input:
         path 'log_file_*.txt'
@@ -113,8 +121,8 @@ process create_summary_csv {
 process create_summary_csv_fromjson {
     label 'cpu'
     cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" }
-    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir '.', saveAs: { csv -> "${output_name}__${csv}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', overwrite: true
 
     input:
         path json_file
@@ -139,8 +147,8 @@ process create_summary_csv_fromjson {
 process predict_peaks {
     label 'cpu_small'
     cache 'lenient'
-    publishDir path: "$peakprediction_outdir", saveAs: { csv -> "${output_name}_${csv}" }, mode: 'symlink', overwrite: false
-    publishDir path: "$peakprediction_outdir", pattern: '*.png', mode: 'symlink', overwrite: false
+    publishDir path: "$peakprediction_outdir", pattern: '*.csv', saveAs: { x -> "${output_name}__${x}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: 'cluster_info/*/*_mergedpeaks.png', saveAs: { x -> "${output_name}__${file(x).name}" }, overwrite: true
 
     input:
         path csv
@@ -153,7 +161,7 @@ process predict_peaks {
 
     output:
         path '*.csv', optional: true, emit: csv
-        path '*.png', optional: true, emit: png
+        path 'cluster_info/*/*_mergedpeaks.png', emit: png
 
     shell:
     '''

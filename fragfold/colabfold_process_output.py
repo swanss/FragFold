@@ -237,11 +237,13 @@ def main(args):
     # If experimental dataframe is provided, merge now
     if experimental_data_path != "":
         exp_df = pd.read_csv(experimental_data_path)
-        print(f"Loaded experimental dataframe")
+        print(f"Loaded experimental dataframe: {experimental_data_path}")
         merge_on_list = ['fragment_parent_name','fragment_start_aa','fragment_center_aa','fragment_end_aa','fragment_length_aa']
         # dataframe contains some replicated measurements (they are generally similar, so arbitrarily take the first)
         exp_df = exp_df.drop_duplicates(subset=merge_on_list)
         merge_df = comb_df.merge(exp_df,how='left',on=merge_on_list,validate='many_to_one')
+        if len(merge_df) == 0:
+            raise ValueError(f"Dataframe empty after merge with experimental data. Check that the column names match: {merge_on_list}")
         merge_df.to_csv("colabfold_predictions.csv")
     else:
         comb_df.to_csv("colabfold_predictions.csv")

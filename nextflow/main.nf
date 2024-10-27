@@ -1,5 +1,5 @@
 // Import processes from module
-include {build_msa; build_msa as build_msa_fragparent; process_msa; colabfold; create_summary_csv; predict_peaks} from './modules'
+include {getName; build_msa; build_msa as build_msa_fragparent; process_msa; colabfold; create_summary_csv; predict_peaks} from './modules'
 
 // Declare syntax version
 nextflow.enable.dsl=2
@@ -7,12 +7,13 @@ nextflow.enable.dsl=2
 // Define workflow
 workflow {
     build_msa(file(params.protein_query_seq),true)
+    
     protein_msa = build_msa.out.a3m
-    protein_name = file(params.protein_query_seq).baseName
+    protein_name = getName(params.protein_query_seq,params.protein_name)
     if (params.heteromeric_mode) {
         build_msa_fragparent(file(params.fragment_query_seq),build_msa.out.done)
         fragment_msa = build_msa_fragparent.out.a3m
-        fragment_parent_name = file(params.fragment_query_seq).baseName
+        fragment_parent_name = getName(params.fragment_query_seq,params.fragment_parent_name)
     } else {
         fragment_msa = protein_msa
         fragment_parent_name = protein_name

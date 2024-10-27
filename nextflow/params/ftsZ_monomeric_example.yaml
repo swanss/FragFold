@@ -1,6 +1,7 @@
 job_name: ftsZ_test
 heteromeric_mode: false
 protein_query_seq: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/gene_fasta/ftsZ_A0A140NFM6.fasta
+protein_name: ftsZ-coding-EcoliBL21DE3 #"" if you want to use the protein_query_seq filename
 fragment_ntermres_start: 260
 fragment_ntermres_final: 265
 fragment_length: 30

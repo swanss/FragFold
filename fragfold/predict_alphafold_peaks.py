@@ -136,9 +136,19 @@ def singleParamSet(args):
             print(f"After filtering, {len(filt_comb_df)} peaks remain")
             print("Merging overlapping peaks...")
             clus_filt_pred_df = clusterPeaksByOverlap(filt_comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
+            print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
+
             if len(clus_filt_pred_df)>0:
-                print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
                 clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_{name}.csv")
+
+                paramsname = createName(args.n_contacts,args.n_weighted_contacts,args.iptm,args.contact_distance_cluster_cutoff)
+                dirname = os.path.join(outdir,paramsname)
+                for (fragment_parent_name,protein_name,fragmentlen),grouped_clus_filt_pred_df in clus_filt_pred_df.groupby(['fragment_parent_name','protein_name','fragment_length_aa']):
+                    cluster_plot_name = os.path.join(dirname,f"{paramsname}_{fragment_parent_name}_{protein_name}_{fragmentlen}_mergedpeaks")
+                    all_fragments_df = pred_df[(pred_df['fragment_parent_name']==fragment_parent_name)
+                                            &(pred_df['protein_name']==protein_name)
+                                            &(pred_df['fragment_length_aa']==fragmentlen)]
+                    plotClusters(all_fragments_df,grouped_clus_filt_pred_df,contig_df=None,name=cluster_plot_name)
     else:
         print("No peaks predicted (consider relaxing the filters)")
 
@@ -196,6 +206,9 @@ def paramScan(args):
         clus_filt_pred_df = clusterPeaksByOverlap(filt_comb_df,frac_overlap=args.cluster_peaks_frac_overlap,verbose=False)
         print(f"After merging, {len(clus_filt_pred_df)} peaks remain...")
         clus_filt_pred_df.to_csv(f"predictalphafoldpeaks_mergeoverlapping{args.cluster_peaks_frac_overlap:.2f}_paramscan_batch{args.batch_id}.csv")
+
+        if len(clus_filt_pred_df) > 0:
+            print("Merged peaks are not plotted when scanning over parameters")
 
     n_peak_list = list()
     for df in df_list:
