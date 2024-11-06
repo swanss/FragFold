@@ -68,10 +68,18 @@ Before running the pipeline, edit `FragFold/nextflow/nextflow.config`. First, se
 ```nextflow
 // Define system-specific variables for all processes
 executor.queueSize = 50
-executor.conda = '/home/user/mambaforge/envs/fragfold'
-env.repo_dir = '/home/gridsan/user/FragFold'
-env.colabfold_dir = '/home/gridsan/user/localcolabfold/colabfold-conda'
-env.alphafold_params_dir = '/home/gridsan/user/localcolabfold/colabfold'
+executor.conda = '/home/gridsan/sswanson/mambaforge/envs/fragfold'
+env.repo_dir = '/data1/groups/keatinglab/swans/savinovCollaboration/FragFold'
+env.colabfold_dir = '/home/gridsan/sswanson/localcolabfold/colabfold-conda'
+env.alphafold_params_dir = '/home/gridsan/sswanson/localcolabfold/colabfold'
+
+// Parameters that general don't change (but you can adjust to experiment)
+env.model_type = 'alphafold2_ptm' //alt: alphafold2_multimer_v1 alphafold2_multimer_v2 alphafold2_multimer_v3
+env.pair_mode = 'unpaired' //alt: paired
+
+// Parameters that govern how the output is stored
+env.colabfold_outdir = "output_colabfold"
+env.peakprediction_outdir = "output_peakprediction"
 ```
 
 Tips
@@ -110,18 +118,26 @@ Now we set the job-specific parameters that control FragFold execution. In order
 job_name: ftsZ_test
 heteromeric_mode: false
 protein_query_seq: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/gene_fasta/ftsZ_A0A140NFM6.fasta
-fragment_ntermres_start: 260 # set to -1 to start at the first residue
-fragment_ntermres_final: 264 # set to -1 to define up to the "N - fragment_length + 1" fragment.
+protein_name: ftsZ-coding-EcoliBL21DE3 #"" if you want to use the protein_query_seq filename
+fragment_ntermres_start: 260
+fragment_ntermres_final: 265
 fragment_length: 30
-protein_nterm_res: 10 # set to -1 to start at the first residue
-protein_cterm_res: 316 # set to -1 to include up to the final residue 
+protein_nterm_res: 10
+protein_cterm_res: 316
 protein_copies: 1
 experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv
 n_contacts: 3
 n_weighted_contacts: 3
 iptm: 0.3
-contact_distance: 0.4
+contact_distance_cutoff: 3.5
+contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7
+```
+
+Note: if you don't have any experimental data corresponding to the fragments, set the path to `nextflow/assets/NO_FILE`.
+
+```yaml
+experimental_data: /data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/assets/NO_FILE
 ```
 
 ### Running nextflow.
@@ -173,4 +189,4 @@ nextflow run ${NEXTFLOWDIR}/main.nf -w $WORKDIR -c $NF_CFG -params-file $PARAMS 
 
 ### Submitting nextflow as a job for large colabfold jobs
 
-For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports `-resume` by copying the task metadata files. To get it running your HPC, you will need to edit the slurm directives and paths.
+For most users, it will take days for all the submitted colabfold jobs to complete. In order to keep nextflow running until all the processes are complete, we submit it as a job with a long time limit. For help with submitting jobs, see the example script: `FragFold/scripts/submit/submit_nextflow.sh`. This script supports `-resume` by copying the task metadata files. To get it running on your HPC, you will need to edit the slurm directives and paths.

@@ -55,6 +55,13 @@ def isContact(chain_group_a,chain_group_b,res_1,res_2):
             return True
     return False
 
+def isIntraChainContact(res_1,res_2,chain_id,min_distance_in_chain=5):
+    if res_1.get_parent().id != chain_id or res_2.get_parent().id != chain_id:
+        return False
+    if abs(int(res_2.id[1]) - int(res_1.id[1])) < min_distance_in_chain:
+        return False
+    return True
+
 def countInterfaceContacts(structure_path, chain_group_a=set('A'), chain_group_b=set('B'), contact_distance = 4, structure = None):
     if structure == None:
         parser = PDBParser(QUIET=True)
@@ -70,6 +77,12 @@ def getInterfaceContactsFromStructure(structure, chain_group_a=set('A'), chain_g
     contacts = [(x,y) for x,y in nearby_res if isContact(chain_group_a,chain_group_b,x,y)]
     # sorted_contacts = [(x,y) if x.get_parent().id < y.get_parent().id else (y,x) for x,y in contacts]
     return contacts
+
+def getIntraChainContactsFromStructure(structure, chain_id='A', contact_distance=4.0, min_distance_in_chain=5):
+    ns = NeighborSearch([x for x in structure.get_atoms()])
+    nearby_res = ns.search_all(contact_distance,'R')
+    intra_chain_contacts = [(x,y) for x,y in nearby_res if isIntraChainContact(x,y,chain_id,min_distance_in_chain)]
+    return intra_chain_contacts
 
 def fixResidueNumbers(chain,start_res_num):
     res_list = [res for res in chain.get_residues()]

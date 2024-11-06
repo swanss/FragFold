@@ -114,12 +114,20 @@ def getRankFromPath(path):
 def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
     name = Path(path).stem.split('_unrelaxed')[0]
     pred_rank = getRankFromPath(path)
-    n_conts = countInterfaceContacts(path,protein_chains,fragment_chains,distance_cutoff)
+    
     start,end = name.split('_')[-1].split('-')
     start,end = int(start),int(end)
     center = (start + end) / 2
+
+    parser = PDBParser(QUIET=True)
+    s = parser.get_structure("s", path)
+    fragment_chain = s[0][list(fragment_chains)[0]]
+    fixResidueNumbers(fragment_chain,start)
+    contacts = convertToString(getInterfaceContactsFromStructure(s,protein_chains,fragment_chains,distance_cutoff))
+    n_conts = len(contacts)
+
     path = Path(path).resolve()
-    return name,pred_rank,start,center,end,n_conts,path
+    return name,pred_rank,start,center,end,contacts,n_conts,path
 
 def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
 
@@ -143,7 +151,7 @@ def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
         for path in all_paths:
             data.append(load_contact_data(path,protein_chains,fragment_chain,distance_cutoff=contact_distance_cutoff))
 
-    conts_df = pd.DataFrame(data,columns=['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa','n_contacts','path'])
+    conts_df = pd.DataFrame(data,columns=['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa','contacts','n_contacts','path'])
     conts_df['protein_chains'] = ','.join(protein_chains)
     conts_df['fragment_chain'] = ','.join(fragment_chain)
     conts_df = conts_df.sort_values(by='fragment_start_aa')
@@ -225,21 +233,21 @@ def main(args):
     comb_df['weighted_contacts'] = comb_df['n_contacts'] * comb_df['iptm']
     comb_df['fragment_length_aa'] = comb_df['fragment_end_aa'] - comb_df['fragment_start_aa'] + 1
     print(f"Combined dataframe with {len(comb_df)} rows")
-
-    # Merge with experimental data df 
-    comb_df.to_csv("colabfold_predictions.csv")
-    print(f"Dataframe with {len(comb_df)} entries total")
-    # confidence_df.to_csv("colabfold_predictions.csv")
-
+    
     # If experimental dataframe is provided, merge now
     if experimental_data_path != "":
         exp_df = pd.read_csv(experimental_data_path)
-        print(f"Loaded experimental dataframe")
+        print(f"Loaded experimental dataframe: {experimental_data_path}")
         merge_on_list = ['fragment_parent_name','fragment_start_aa','fragment_center_aa','fragment_end_aa','fragment_length_aa']
         # dataframe contains some replicated measurements (they are generally similar, so arbitrarily take the first)
         exp_df = exp_df.drop_duplicates(subset=merge_on_list)
         merge_df = comb_df.merge(exp_df,how='left',on=merge_on_list,validate='many_to_one')
-        merge_df.to_csv(f"results_expmerge.csv")
+        if len(merge_df) == 0:
+            raise ValueError(f"Dataframe empty after merge with experimental data. Check that the column names match: {merge_on_list}")
+        merge_df.to_csv("colabfold_predictions.csv")
+    else:
+        comb_df.to_csv("colabfold_predictions.csv")
+        print(f"Dataframe with {len(comb_df)} entries total")
 
     if args.generate_plots:
         for groupers,group_df in comb_df.groupby(['fragment_parent_name','protein_name','fragment_length_aa','description']):

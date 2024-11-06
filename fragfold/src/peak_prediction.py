@@ -157,6 +157,33 @@ def peakScoreLocal(val,left_vals,right_vals):
 #     print(scores)
     return np.mean(scores)
 
+def zscoreCutoff(filt_df,inhibeffectcutoff=-2.0,zscore=-2.5):
+    filt_df = filt_df[filt_df['inhibitory_effect_enrichment']>inhibeffectcutoff]
+    print(f"mean: {filt_df['inhibitory_effect_enrichment'].mean()}")
+    print(f"std: {filt_df['inhibitory_effect_enrichment'].std()}")
+    return filt_df['inhibitory_effect_enrichment'].mean() + zscore*filt_df['inhibitory_effect_enrichment'].std()
+
+def plotExpPeaks(gene,exp_df,peak_df,inhib_effect_cutoff,save=True,dirname=""):
+    plt.clf()
+    
+    ax = sns.lineplot(data=exp_df,x='fragment_center_aa',y='inhibitory_effect_enrichment',alpha=.75)
+    ax.axhline(inhib_effect_cutoff,c='r',ls='--')
+
+    plt.hlines(peak_df['peak_fragment_score'],peak_df['peak_region_first_fragment_center_aa'],peak_df['peak_region_last_fragment_center_aa'],
+              colors='g')
+
+    fcenter = peak_df['fragment_center_aa']
+    wcontacts = peak_df['peak_fragment_score']
+    ax = sns.scatterplot(x=fcenter,y=wcontacts,color='r')
+    ax.set_title(gene)
+    
+    filename = f"{gene}_experimentalpeaks.png" if dirname == "" else f"{dirname}/{gene}_experimentalpeaks.png"
+    if save:
+        plt.savefig(filename,dpi=300,bbox_inches='tight')
+    
+    plt.show()
+
+
 ### Functions for predicting peaks using AlphaFold
 
 def filterAlphaFoldPredictions(pred_df: pd.DataFrame,
@@ -216,7 +243,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
     contacts_list = []
     for i,row in pred_df_copy.iterrows():
         s_extract = parser.get_structure("s", row['path'])
-        fixResidueNumbers(s_extract[0]['B'],row['fragment_start_aa'])
+        fixResidueNumbers(s_extract[0][row['fragment_chain']],row['fragment_start_aa'])
         protein_chains = set(row['protein_chains'].split(','))
         fragment_chain = set(row['fragment_chain'])
         contacts_residues = getInterfaceContactsFromStructure(s_extract,protein_chains,fragment_chain,4.0)
@@ -240,7 +267,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
                         yticklabels=pred_df_copy['fragment_start_aa'])
             ax.set_xlabel('fragment_start_aa')
             ax.set_ylabel('fragment_start_aa')
-            plt.savefig(f"{output_prefix}_contactsim_fragments.png",dpi=300)
+            plt.savefig(f"{output_prefix}_contactsim_fragments.png",bbox_inches='tight',dpi=300)
 
         # hierarchically cluster
         dist_matrix = 1 - sim_matrix
@@ -274,7 +301,7 @@ def clusterOverlappingFragments(pred_df: pd.DataFrame,
     pred_clusrep_df['cluster_first_fragment_center_aa'] = first_fragment_center
     pred_clusrep_df['cluster_last_fragment_center_aa'] = last_fragment_center
     pred_clusrep_df['cluster_member_idx'] = cluster_member_idx_list
-    pred_clusrep_df.drop(columns=['contact_set'],inplace=True)
+    # pred_clusrep_df.drop(columns=['contact_set'],inplace=True)
 
     return pred_clusrep_df
 
@@ -343,15 +370,20 @@ def plotClusters(pred_df,cluster_df,contig_df,name):
     max_contacts_height = pred_df.groupby('fragment_name')['weighted_contacts'].mean().max()
     cluster_df = organizeClusters(cluster_df,max_contacts_height+1,.75,5)
     ax = sns.lineplot(data=pred_df,x='fragment_center_aa',y='weighted_contacts')
-    plt.hlines(y=[max_contacts_height]*contig_df['fragment_contig'].nunique(),
-               xmin=list(contig_df.groupby('fragment_contig')['fragment_center_aa'].min()),
-               xmax=[x+1 for x in contig_df.groupby('fragment_contig')['fragment_center_aa'].max()],
-               color='red',linewidth=5,alpha=.5)
+    if contig_df is not None:
+        plt.hlines(y=[max_contacts_height]*contig_df['fragment_contig'].nunique(),
+                xmin=list(contig_df.groupby('fragment_contig')['fragment_center_aa'].min()),
+                xmax=[x+1 for x in contig_df.groupby('fragment_contig')['fragment_center_aa'].max()],
+                color='red',linewidth=5,alpha=.5,label='Fragment contig')
     plt.hlines(y=list(cluster_df['height']),
                xmin=list(cluster_df['cluster_first_fragment_center_aa']),
                xmax=list(cluster_df['cluster_last_fragment_center_aa']+1),
-               color='blue',linewidth=5,alpha=.5)
-    plt.savefig(f"{name}.png",dpi=300)
+               color='blue',linewidth=5,alpha=.5,label='Predicted binding cluster (peak)')
+    ax.set_title('Average weighted contacts vs. fragment position')
+    ax.set_ylabel('Average weighted contacts')
+    ax.set_xlabel('Fragment position in protein (center amino acid)')
+    ax.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+    plt.savefig(f"{name}.png",dpi=300,bbox_inches='tight')
     plt.show()
     plt.close('all')
     return
@@ -409,6 +441,32 @@ def getResidueOverlapReq(fragmentLength,residueOverlapFrac):
 # residue_overlap_frac = float(2/3)
 # residue_overlap_req = getResidueOverlapReq(fragment_length,residue_overlap_frac)
 # print(residue_overlap_req)
+
+def findOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_fraction=(2/3)):
+    pred_df_copy = pred_df.copy(deep=True)
+    exp_df_copy = exp_df.copy(deep=True)
+
+    pred_peak_overlap = [False]*len(pred_df)
+    exp_peak_overlap = [False]*len(exp_df)
+    
+    for i,(_,exp_peak) in enumerate(exp_df.iterrows()):
+        res_overlap = getResidueOverlapReq(exp_peak['fragment_length_aa'],residue_overlap_fraction)
+        for j,(_,pred_peak) in enumerate(pred_df.iterrows()):
+            # print(exp_peak['peak_region_first_fragment_center_aa'],exp_peak['peak_region_last_fragment_center_aa'])
+
+            # if the peaks come from different genes, or different lengths, they can't overlap
+            if (exp_peak['fragment_parent_name'] != pred_peak['fragment_parent_name']) or (exp_peak['fragment_length_aa'] != pred_peak['fragment_length_aa']):
+                continue
+            overlap = rangeOverlap(exp_peak['peak_region_first_fragment_center_aa'],exp_peak['peak_region_last_fragment_center_aa'],
+                                        pred_peak['cluster_first_fragment_center_aa'],pred_peak['cluster_last_fragment_center_aa'],
+                                        exp_peak['fragment_length_aa'],res_overlap)
+            if overlap:
+                exp_peak_overlap[i] = True
+                pred_peak_overlap[j] = True
+
+    pred_df_copy['overlap'] = pred_peak_overlap
+    exp_df_copy['overlap'] = exp_peak_overlap
+    return pred_df_copy,exp_df_copy
 
 def calculateOverlapBetweenPredandExp(pred_df,exp_df,residue_overlap_frac_list):
     # lists for storing data
@@ -497,8 +555,8 @@ def calculateBenchmarkStatistics(overlap_df,
     if byGene:
         nExpPeaks_byGene_df = exp_df.groupby('fragment_parent_name').size().reset_index()
         nExpPeaks_byGene = dict(zip(nExpPeaks_byGene_df['fragment_parent_name'],nExpPeaks_byGene_df[0]))
-        nExpKnownPeaks_byGene_df = exp_df[exp_df['peak_type']=='known'].groupby('fragment_parent_name').size().reset_index()
-        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['fragment_parent_name'],nExpKnownPeaks_byGene_df[0]))
+        nExpKnownPeaks_byGene_df = exp_df.groupby('fragment_parent_name',group_keys=True).apply(lambda x: len(x[x['peak_type']=='known']),include_groups=False).reset_index(name='size')
+        nExpKnownPeaks_byGene = dict(zip(nExpKnownPeaks_byGene_df['fragment_parent_name'],nExpKnownPeaks_byGene_df['size']))
 
         nExpPeaks_list = []
         nExpKnownPeaks_list = []
@@ -570,7 +628,7 @@ def calculateBenchmarkStatistics(overlap_df,
                                 'min_cluster_size':minClusterSize_list,
                                 'overlap_frac_req':resOverlapFrac_list,
                                 'n_exp_peaks':nExpPeaks_list,
-                                '# pred peaks':ntotalpredpeaks_list,
+                                'n_pred_peaks':ntotalpredpeaks_list,
                                 'n_overlap_exp_peaks':noverlapexppeaks_list,
                                 'n_overlap_pred_peaks':noverlappredpeaks_list,
                                 'n_known_exp_peaks':nExpKnownPeaks_list,
@@ -621,6 +679,7 @@ def mergeAllPeaks(peak_list):
         'cluster':list(set(itertools.chain.from_iterable(peak_set_df['cluster']))),
         'cluster_size':peak_set_df['cluster_size'].sum(),
         'cluster_n_fragments':peak_set_df['cluster_n_fragments'].sum(),
+        'full_cluster_name':'__'.join(peak_set_df['full_cluster_name']),
         'cluster_first_fragment_center_aa':peak_set_df['cluster_first_fragment_center_aa'].min(),
         'cluster_last_fragment_center_aa':peak_set_df['cluster_last_fragment_center_aa'].max(),
         'cluster_first_residue':peak_set_df['cluster_first_fragment_center_aa'].min() - (rep_fragment['fragment_length_aa']-1)/2,
@@ -628,8 +687,10 @@ def mergeAllPeaks(peak_list):
         'n_contacts_cutoff':rep_fragment['n_contacts_cutoff'],
         'n_weighted_contacts_cutoff':rep_fragment['n_weighted_contacts_cutoff'],
         'iptm_cutoff':rep_fragment['iptm_cutoff'],
-        'contact_distance_cutoff':rep_fragment['contact_distance_cutoff']
+        'contact_distance_cluster_cutoff':rep_fragment['contact_distance_cluster_cutoff'],
+        'contact_set':rep_fragment['contact_set']
     }
+    # note: full_cluster_name is not propagated, as it will need to be updated.
     return result
 
 def clusterOverlap(smaller_peak,larger_peak, verbose=False):

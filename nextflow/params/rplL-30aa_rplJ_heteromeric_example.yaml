@@ -2,15 +2,19 @@ job_name: rplL-30aa_rplJ_test
 heteromeric_mode: true
 protein_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplJ_A0A140NDB6.fasta
 fragment_query_seq: /home/gridsan/sswanson/swans/savinovCollaboration/FragFold/input/gene_fasta/rplL_A0A140SS63.fasta
+protein_name: "" # "" if you want to use the fragment_query_seq filename
+fragment_parent_name: rplL-coding-EcoliBL21DE3 # null if you want to use the fragment_query_seq filename
 fragment_ntermres_start: 1
 fragment_ntermres_final: 9
 fragment_length: 30
 protein_nterm_res: 1
 protein_cterm_res: 165
 protein_copies: 1
+# experimental_data: /data1/groups/keatinglab/swans/savinovCollaboration/FragFold/nextflow/assets/NO_FILE # use this file if you don't have any experimental data
 experimental_data: /home/gridsan/sswanson/keatinglab_shared/swans/savinovCollaboration/FragFold/input/inhibitory_data/Savinov_2022_inhib_peptide_mapping.csv
 n_contacts: 3
 n_weighted_contacts: 0 #relaxed from 3 for this example
 iptm: 0.15 #relaxed from 0.3 for this example
-contact_distance: 0.4
+contact_distance_cutoff: 3.5
+contact_distance_cluster_cutoff: 0.6
 cluster_peaks_frac_overlap: 0.7

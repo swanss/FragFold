@@ -1,8 +1,16 @@
+def getName(file_path,file_name) {
+    if ( file_name == "" ) {
+        return file(file_path).baseName
+    } else {
+        return file_name
+    }
+}
+
 
 // Define each process
 process build_msa {
     label 'cpu_network'
-    // cache 'lenient'
+    cache 'lenient'
 
     input:
         path query_seq
@@ -21,7 +29,7 @@ process build_msa {
 
 process process_msa {
     label 'cpu'
-    // cache 'lenient'
+    cache 'lenient'
 
     input:
         path a3m
@@ -52,19 +60,21 @@ process process_msa {
 
 process colabfold {
     label 'gpu'
-    // cache 'lenient'
+    cache 'lenient'
+    publishDir "$colabfold_outdir/${a3m_concat.baseName}", overwrite: true
 
     input:
         path a3m_concat
 
     output:
-        path 'data/log.txt', emit: log
-        path 'data/*_unrelaxed_rank_00?_*.pdb', emit: pdb
-        
+        path 'log.txt', emit: log
+        path '*_unrelaxed_rank_00?_*.pdb', emit: pdb
+        path '*.png', emit: png
+
     shell:
     '''
     export PATH="!{colabfold_dir}/bin:$PATH"
-    colabfold_batch !{a3m_concat} data \
+    colabfold_batch !{a3m_concat} . \
         --data !{alphafold_params_dir} \
         --model-type !{model_type} \
         --pair-mode !{pair_mode}
@@ -73,8 +83,9 @@ process colabfold {
 
 process create_summary_csv {
     label 'cpu'
-    // cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    cache 'lenient'
+    publishDir '.', saveAs: { csv -> "${output_name}__${csv}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', overwrite: true
 
     input:
         path 'log_file_*.txt'
@@ -83,48 +94,61 @@ process create_summary_csv {
         val fragment_parent_name
         path experimental_data
         val output_name
+        val contact_distance_cutoff
 
     output:
-        path 'results_expmerge.csv', emit: csv
+        path 'colabfold_predictions.csv', emit: csv
+        path '*.png', emit: png
 
+    script:
     shell:
     '''
+    exp_data=!{experimental_data}
+    filename=$(basename -- "$exp_data")
+    EXP_DATA_ARG=""
+    if [[ $filename != "NO_FILE" ]]; then EXP_DATA_ARG="--experimental_data "$exp_data; fi
     python !{repo_dir}/fragfold/colabfold_process_output.py \
         --predicted_pdbs !{pdb_file} \
         --confidence_logs log_file_*.txt \
         --full_protein !{protein_name} \
         --fragment_protein !{fragment_parent_name} \
-        --experimental_data !{experimental_data} \
-        --generate_plots
+        --contact_distance_cutoff !{contact_distance_cutoff} \
+        --generate_plots \
+        $EXP_DATA_ARG
     '''
 }
 
 process create_summary_csv_fromjson {
     label 'cpu'
-    // cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    cache 'lenient'
+    publishDir '.', saveAs: { csv -> "${output_name}__${csv}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: '*.png', overwrite: true
 
     input:
         path json_file
         path experimental_data
         val output_name
+        val contact_distance_cutoff
 
     output:
-        path 'results_expmerge.csv', emit: csv
+        path 'colabfold_predictions.csv', emit: csv
+        path '*.png', emit: png
 
     shell:
     '''
     python !{repo_dir}/fragfold/colabfold_process_output.py \
         --import_json !{json_file} \
         --experimental_data !{experimental_data} \
+        --contact_distance_cutoff !{contact_distance_cutoff} \
         --generate_plots
     '''
 }
 
 process predict_peaks {
     label 'cpu_small'
-    // cache 'lenient'
-    publishDir '.', saveAs: { csv -> "${output_name}_${csv}" } 
+    cache 'lenient'
+    publishDir path: "$peakprediction_outdir", pattern: '*.csv', saveAs: { x -> "${output_name}__${x}" }, overwrite: true
+    publishDir path: "$peakprediction_outdir", pattern: 'cluster_info/*/*_mergedpeaks.png', saveAs: { x -> "${output_name}__${file(x).name}" }, overwrite: true
 
     input:
         path csv
@@ -132,11 +156,12 @@ process predict_peaks {
         val n_contacts
         val n_weighted_contacts
         val iptm
-        val contact_distance
+        val contact_distance_cluster_cutoff
         val cluster_peaks_frac_overlap
 
     output:
-        path '*.csv', optional: true
+        path '*.csv', optional: true, emit: csv
+        path 'cluster_info/*/*_mergedpeaks.png', emit: png
 
     shell:
     '''
@@ -145,7 +170,7 @@ process predict_peaks {
         --n_contacts !{n_contacts} \
         --n_weighted_contacts !{n_weighted_contacts} \
         --iptm !{iptm} \
-        --contact_distance !{contact_distance} \
+        --contact_distance_cluster_cutoff !{contact_distance_cluster_cutoff} \
         --cluster_peaks_frac_overlap !{cluster_peaks_frac_overlap} \
         --verbose
     '''

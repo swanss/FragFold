@@ -9,7 +9,7 @@ def drawContact(string,obj):
     split = string.split('-')
     assert len(split) == 2
     sel1,sel2 = map(string2sel,split)
-    name = f"{obj}_{string}"
+    name = f"contact_{obj}_{string}"
     print("drawing: ",name)
     print(sel1)
     print(sel2)
