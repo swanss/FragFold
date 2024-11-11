@@ -377,7 +377,7 @@ def plotClusters(pred_df,cluster_df,contig_df,name):
                 color='red',linewidth=5,alpha=.5,label='Fragment contig')
     plt.hlines(y=list(cluster_df['height']),
                xmin=list(cluster_df['cluster_first_fragment_center_aa']),
-               xmax=list(cluster_df['cluster_last_fragment_center_aa']+1),
+               xmax=list(cluster_df['cluster_last_fragment_center_aa']),
                color='blue',linewidth=5,alpha=.5,label='Predicted binding cluster (peak)')
     ax.set_title('Average weighted contacts vs. fragment position')
     ax.set_ylabel('Average weighted contacts')
