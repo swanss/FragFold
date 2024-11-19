@@ -12,6 +12,7 @@ def main(args):
     fragment_name = Path(fragment_a3m).stem
     fragment_start_range = (args.fragment_ntermres_start,args.fragment_ntermres_final)
     fragment_length = args.fragment_length
+    fragment_tile_step = args.fragment_tile_step
     protein_copies = args.protein_copies
 
     protein_range = (args.protein_ntermres,args.protein_ctermres)
@@ -23,6 +24,7 @@ def main(args):
                                                                 protein_range,
                                                                 fragment_start_range,
                                                                 fragment_length,
+                                                                fragment_tile_step,
                                                                 protein_copies)
     else:
         # Create heteromeric interaction MSAs: fragments of protein A + full-length protein B
@@ -37,6 +39,7 @@ def main(args):
                                                                         protein_range,
                                                                         fragment_start_range,
                                                                         fragment_length,
+                                                                        fragment_tile_step,
                                                                         protein_copies)
     with open("a3m_list.txt","w") as file:
         for path in msa_path_list:
@@ -70,6 +73,12 @@ if __name__ == "__main__":
         type=int,
         help="The residue length of the fragments",
         default=30
+    )
+    parser.add_argument(
+        "--fragment_tile_step",
+        type=int,
+        help="The tiling step size in aa when generating fragments",
+        default=1
     )
     parser.add_argument(
         "--protein_a3m_input",
