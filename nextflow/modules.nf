@@ -77,7 +77,8 @@ process colabfold {
     colabfold_batch !{a3m_concat} . \
         --data !{alphafold_params_dir} \
         --model-type !{model_type} \
-        --pair-mode !{pair_mode}
+        --pair-mode !{pair_mode} \
+        --num-models !{num_models}
     '''
 }
 

@@ -7,10 +7,10 @@ example*
 test*
 data
 results
-old
-*old*
+old_files
 */analysis/pnas_resubmission
 input/gene_fasta_original
+analysis
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

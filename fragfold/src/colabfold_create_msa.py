@@ -37,8 +37,8 @@ def createMSA(
     inputMSA: str, 
     protein_range: tuple, 
     fragment_range: tuple, 
-    subsample: int, 
     a3m_output_path: str,
+    subsample: int = -1,
     protein_copies: int = 1, 
     fragment_single_sequence=False, 
     fragment_shuffle=False
@@ -67,6 +67,8 @@ def createMSA(
             []
         )
     protein_msa = subsampleMSA(protein_msa,subsample)
+    if protein_copies > 1:
+        protein_msa.set_cardinality(protein_copies)
     fragment_msa = subsampleMSA(fragment_msa,subsample)
     combined_msa = protein_msa + fragment_msa
     combined_msa.save(a3m_output_path)
@@ -77,8 +79,8 @@ def createMSAHeteromicInteraction(
     protein_range: tuple, 
     fragmentProteinMSA: str, 
     fragment_range: tuple, 
-    subsample: int, 
     a3m_output_path: str, 
+    subsample: int = -1,
     protein_copies: int = 1,
     fragmentSingleSequence=False, 
     fragmentShuffle=False
@@ -109,6 +111,8 @@ def createMSAHeteromicInteraction(
             []
         )
     protein_msa = subsampleMSA(protein_msa,subsample)
+    if protein_copies > 1:
+        protein_msa.set_cardinality(protein_copies)
     fragment_msa = subsampleMSA(fragment_msa,subsample)
     combined_msa = protein_msa + fragment_msa
     combined_msa.save(a3m_output_path)
@@ -148,7 +152,7 @@ def verifyProteinRange(protein_range,protein_n_res):
        (protein_range[1] > protein_n_res):
         raise ValueError(f"Provided protein residue range: ({protein_range[0]},{protein_range[1]}) is invalid")
         
-def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_start_range,fragment_length,protein_copies=1,fragment_single_sequence=False,fragment_shuffle_sequence=False):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
     
     Args
@@ -163,6 +167,12 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
         an inclusive range defining the range of starting residues for fragments of length `fragment_length`
     fragment_length : int
         the number of residues to take when defining a fragment
+    protein_copies : int
+        the cardinality of the protein chain
+    fragment_single_sequence : bool
+        option to use single sequence for the fragment
+    fragment_shuffle_sequence : bool
+        option to shuffle the sequence of the fragment 
     '''
     print("Generating MSAs for a monomeric interaction...")
 
@@ -181,19 +191,19 @@ def createIndividualMSAsFullLengthFragment(a3m_path,name,protein_range,fragment_
 
     fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,protein_n_res-fragment_length+2))
     with Pool() as p:
-        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragment_starmap,[(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
+        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragment_starmap,[(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range,fragment_single_sequence,fragment_shuffle_sequence) for fragment_start in fragment_start_iter])
 
     return a3m_out_path_list
 
-def createIndividualMSAsFullLengthFragment_starmap(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range):
+def createIndividualMSAsFullLengthFragment_starmap(a3m_path,fragment_start,fragment_length,dir_name,name,protein_copies,protein_range,fragment_single_sequence,fragment_shuffle_sequence):
     fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
     a3m_out_path = dir_name.joinpath(f"{name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
     abs_a3m_out_path = a3m_out_path.absolute()
     print(f"Creating .a3m file: {abs_a3m_out_path}")
-    createMSA(a3m_path, protein_range, fragment_range, -1, abs_a3m_out_path, protein_copies)
+    createMSA(a3m_path, protein_range, fragment_range, abs_a3m_out_path, -1, protein_copies, fragment_single_sequence, fragment_shuffle_sequence)
     return abs_a3m_out_path
         
-def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1):
+def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fulllength_name,fragment_a3m_path,fragment_name,protein_range,fragment_start_range,fragment_length,protein_copies=1,fragment_single_sequence=False,fragment_shuffle_sequence=False):
     '''Loads a monomer MSA and creates new MSAs that contain 1) a large section of the monomer and 2) a short fragment of the monomer
     
     Args
@@ -210,6 +220,12 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
         an inclusive range defining the range of starting residues for fragments of length `fragment_length`
     fragment_length : int
         the number of residues to take when defining a fragment
+    protein_copies : int
+        the cardinality of the protein chain
+    fragment_single_sequence : bool
+        option to use single sequence for the fragment
+    fragment_shuffle_sequence : bool
+        option to shuffle the sequence of the fragment 
     '''
     print("Generating MSAs for a heteromeric interaction...")
 
@@ -229,14 +245,14 @@ def createIndividualMSAsFullLengthFragmentHeteromeric(fulllength_a3m_path,fullle
 
     fragment_start_iter = range(fragment_start_range[0],min(fragment_start_range[1]+1,fragmentprotein_n_res-fragment_length+2))
     with Pool() as p:
-        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragmentHeteromeric_starmap,[(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range) for fragment_start in fragment_start_iter])
+        a3m_out_path_list = p.starmap(createIndividualMSAsFullLengthFragmentHeteromeric_starmap,[(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range,fragment_single_sequence,fragment_shuffle_sequence) for fragment_start in fragment_start_iter])
 
     return a3m_out_path_list
 
-def createIndividualMSAsFullLengthFragmentHeteromeric_starmap(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range):
+def createIndividualMSAsFullLengthFragmentHeteromeric_starmap(fulllength_a3m_path,fragment_a3m_path,fragment_start,fragment_length,dir_name,fulllength_name,fragment_name,protein_copies,protein_range,fragment_single_sequence,fragment_shuffle_sequence):
     fragment_range = (fragment_start,fragment_start+fragment_length-1) # range is inclusive
     a3m_out_path = dir_name.joinpath(f"{fulllength_name}{protein_copies}copies_{protein_range[0]}-{protein_range[1]}_{fragment_name}_{fragment_range[0]}-{fragment_range[1]}.a3m")
     abs_a3m_out_path = a3m_out_path.absolute()
     print(f"Creating .a3m file: {abs_a3m_out_path}")
-    createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, -1, abs_a3m_out_path, protein_copies)
+    createMSAHeteromicInteraction(fulllength_a3m_path, protein_range, fragment_a3m_path, fragment_range, abs_a3m_out_path, -1, protein_copies, fragment_single_sequence, fragment_shuffle_sequence)
     return abs_a3m_out_path
