@@ -46,6 +46,10 @@ process process_msa {
 
     shell:
     '''
+    # set arg vars
+    if [[ !{fragment_single_sequence} == true ]]; then arg1="--fragment_single_sequence"; else arg1=""; fi
+    if [[ !{fragment_shuffle_sequence} == true ]]; then arg2="--fragment_shuffle_sequence"; else arg2=""; fi
+
     python !{repo_dir}/fragfold/create_fragment_msa.py \
         --fragment_a3m_input !{a3m} \
         --fragment_ntermres_start !{fragment_ntermres_start} \
@@ -54,7 +58,9 @@ process process_msa {
         --protein_a3m_input !{protein_a3m_input} \
         --protein_ntermres !{protein_ntermres} \
         --protein_ctermres !{protein_ctermres} \
-        --protein_copies !{protein_copies}
+        --protein_copies !{protein_copies} \
+        $arg1 \
+        $arg2 \
     '''
 }
 
@@ -77,7 +83,8 @@ process colabfold {
     colabfold_batch !{a3m_concat} . \
         --data !{alphafold_params_dir} \
         --model-type !{model_type} \
-        --pair-mode !{pair_mode}
+        --pair-mode !{pair_mode} \
+        --num-models !{num_models}
     '''
 }
 

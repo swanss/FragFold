@@ -13,6 +13,9 @@ def main(args):
     fragment_start_range = (args.fragment_ntermres_start,args.fragment_ntermres_final)
     fragment_length = args.fragment_length
     protein_copies = args.protein_copies
+    fragment_single_sequence = args.fragment_single_sequence
+    fragment_shuffle_sequence = args.fragment_shuffle_sequence
+    print(fragment_single_sequence,fragment_shuffle_sequence)
 
     protein_range = (args.protein_ntermres,args.protein_ctermres)
 
@@ -23,7 +26,9 @@ def main(args):
                                                                 protein_range,
                                                                 fragment_start_range,
                                                                 fragment_length,
-                                                                protein_copies)
+                                                                protein_copies,
+                                                                fragment_single_sequence,
+                                                                fragment_shuffle_sequence)
     else:
         # Create heteromeric interaction MSAs: fragments of protein A + full-length protein B
 
@@ -37,7 +42,9 @@ def main(args):
                                                                         protein_range,
                                                                         fragment_start_range,
                                                                         fragment_length,
-                                                                        protein_copies)
+                                                                        protein_copies,
+                                                                        fragment_single_sequence,
+                                                                        fragment_shuffle_sequence)
     with open("a3m_list.txt","w") as file:
         for path in msa_path_list:
             file.write(str(path)+"\n")
@@ -94,6 +101,16 @@ if __name__ == "__main__":
         type=int,
         help="The number of copies of the full-length protein",
         default=1
+    )
+    parser.add_argument(
+        "--fragment_single_sequence",
+        action='store_true',
+        help="If true, will remove the MSA for the fragment and model using the query sequence",
+    )
+    parser.add_argument(
+        "--fragment_shuffle_sequence",
+        action='store_true',
+        help="If true, will remove the MSA for the fragment and model using the shuffled query sequence",
     )
     args = parser.parse_args()
     main(args)
