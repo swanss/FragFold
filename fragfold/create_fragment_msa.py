@@ -15,6 +15,7 @@ def main(args):
     protein_copies = args.protein_copies
     fragment_single_sequence = args.fragment_single_sequence
     fragment_shuffle_sequence = args.fragment_shuffle_sequence
+    print(fragment_single_sequence,fragment_shuffle_sequence)
 
     protein_range = (args.protein_ntermres,args.protein_ctermres)
 
@@ -103,15 +104,13 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--fragment_single_sequence",
-        type=bool,
+        action='store_true',
         help="If true, will remove the MSA for the fragment and model using the query sequence",
-        default=False,
     )
     parser.add_argument(
         "--fragment_shuffle_sequence",
-        type=bool,
+        action='store_true',
         help="If true, will remove the MSA for the fragment and model using the shuffled query sequence",
-        action=False,
     )
     args = parser.parse_args()
     main(args)

@@ -29,6 +29,7 @@ def shuffleSeq(seq,maxPercentIdentity=0.3):
 def subsampleMSA(msa: a3m_tools.MSAa3m, subsample: int):
     # subsample the MSA
     if subsample > 0:
+        print("Subsampling MSA")
         msa.sequences = msa.sequences[:subsample]
     return msa
 
