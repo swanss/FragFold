@@ -25,7 +25,9 @@ workflow {
                 protein_msa,
                 params.protein_nterm_res,
                 params.protein_cterm_res,
-                params.protein_copies)
+                params.protein_copies,
+                fragment_parent_name,
+                protein_name)
                 | flatten
                 | colabfold
     create_summary_csv(colabfold.out.log | collect , 
