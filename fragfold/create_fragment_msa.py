@@ -9,7 +9,7 @@ from fragfold.src.colabfold_create_msa import createIndividualMSAsFullLengthFrag
 def main(args):
     # In either mode, there will be information detailing the fragments
     fragment_a3m = args.fragment_a3m_input
-    fragment_name = Path(fragment_a3m).stem
+    fragment_name = args.fragment_parent_name if args.fragment_parent_name != "" else Path(fragment_a3m).stem 
     fragment_start_range = (args.fragment_ntermres_start,args.fragment_ntermres_final)
     fragment_length = args.fragment_length
     protein_copies = args.protein_copies
@@ -34,7 +34,7 @@ def main(args):
 
         # In heteromeric interaction mode, we parse more arguments
         fulllengthprotein_a3m_path = args.protein_a3m_input
-        fulllengthprotein_name = Path(fulllengthprotein_a3m_path).stem
+        fulllengthprotein_name = args.protein_name if args.protein_name != "" else Path(fulllengthprotein_a3m_path).stem
         msa_path_list = createIndividualMSAsFullLengthFragmentHeteromeric(fulllengthprotein_a3m_path,
                                                                         fulllengthprotein_name,
                                                                         fragment_a3m,
@@ -111,6 +111,18 @@ if __name__ == "__main__":
         "--fragment_shuffle_sequence",
         action='store_true',
         help="If true, will remove the MSA for the fragment and model using the shuffled query sequence",
+    )
+    parser.add_argument(
+        "--fragment_parent_name",
+        type=str,
+        default="",
+        help="If given, the fragment parent will be renamed to this. Otherwise the name of the .a3m file is used",
+    )
+    parser.add_argument(
+        "--protein_name",
+        type=str,
+        default="",
+        help="If given, the protein will be renamed to this. Otherwise the name of the .a3m file is used",
     )
     args = parser.parse_args()
     main(args)

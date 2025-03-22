@@ -40,6 +40,8 @@ process process_msa {
         val protein_ntermres
         val protein_ctermres
         val protein_copies
+        val fragment_parent_name
+        val protein_name
 
     output:
         path '*/*.a3m'
@@ -59,6 +61,8 @@ process process_msa {
         --protein_ntermres !{protein_ntermres} \
         --protein_ctermres !{protein_ctermres} \
         --protein_copies !{protein_copies} \
+        --fragment_parent_name !{fragment_parent_name} \
+        --protein_name !{protein_name} \
         $arg1 \
         $arg2 \
     '''
@@ -117,8 +121,8 @@ process create_summary_csv {
     python !{repo_dir}/fragfold/colabfold_process_output.py \
         --predicted_pdbs !{pdb_file} \
         --confidence_logs log_file_*.txt \
-        --full_protein !{protein_name} \
-        --fragment_protein !{fragment_parent_name} \
+        --protein_name !{protein_name} \
+        --fragment_parent_name !{fragment_parent_name} \
         --contact_distance_cutoff !{contact_distance_cutoff} \
         --generate_plots \
         $EXP_DATA_ARG

@@ -25,13 +25,12 @@ def get_confidence_paths(dir_path):
 
 def load_confidence_data(path):
     # e.g. will match 2024-05-04 12:32:21,588 Query 1/1: ftsZ1copies_10-316_ftsZ_166-195 (length 337)
-    fragment_name_pat = r"Query 1\/1: ((\D+)(\d)copies_(\d+)-(\d+)_(\D+)_(\d+)-(\d+)) \(length (\d+)\)"
+    fragment_name_pat = r"Query 1\/1: (.+) \(length (\d+)\)"
 
     # e.g. will match 2023-05-26 20:03:23,691 rank_001_alphafold2_ptm_model_1_seed_000 pLDDT=93 pTM=0.801 ipTM=0.257 
     confidence_pat = r"rank_00(\d)_alphafold2_ptm_model_\d_seed_\d{3} pLDDT=([+-]?[0-9]*[.]?[0-9]+) pTM=([+-]?[0-9]*[.]?[0-9]+) ipTM=([+-]?[0-9]*[.]?[0-9]+)"
     
     confidence_dict = {'fragment_name':[],'rank':[],
-                       'fragment_start_aa':[],'fragment_center_aa':[],'fragment_end_aa':[],
                        'plddt':[],'ptm':[],'iptm':[]}
 
     fragment_name_match_count,conf_match_count = 0,0
@@ -42,8 +41,6 @@ def load_confidence_data(path):
             if match is not None:
                 fragment_name_match_count += 1
                 name = match[1]
-                start,end = int(match[7]),int(match[8])
-                center = (start+end)/2
                 continue
 
             # search for confidence data
@@ -59,9 +56,6 @@ def load_confidence_data(path):
 
                 confidence_dict['fragment_name'].append(name)
                 confidence_dict['rank'].append(pred_rank)
-                confidence_dict['fragment_start_aa'].append(start)
-                confidence_dict['fragment_center_aa'].append(center)
-                confidence_dict['fragment_end_aa'].append(end)
                 confidence_dict['plddt'].append(plddt)
                 confidence_dict['ptm'].append(ptm)
                 confidence_dict['iptm'].append(iptm)
@@ -85,7 +79,6 @@ def get_confidence_dataframe(all_paths,n_workers=1):
             data.append(load_confidence_data(path))
 
     confidence_df = pd.concat(data,ignore_index=True)
-    confidence_df = confidence_df.sort_values(by='fragment_start_aa')
     print(f"{len(all_paths)} total paths and {len(confidence_df)} lines in the dataframe")
     return confidence_df
 
@@ -103,20 +96,16 @@ def get_chains_from_structure(path):
     chain_id_list = [c.id for c in structure.get_chains()]
     return chain_id_list
 
-def getRankFromPath(path):
-    pat = r"rank_(00)?(\d)"
-    match = re.search(pattern=pat,string=path)
+def load_contact_data(path,protein_chains,fragment_chains,protein_name,fragment_parent_name,distance_cutoff):
+    # construct regex, search filename, and extract params
+    regex_pat = '^('+protein_name+r'(\d+)copies_(\d+)-(\d+)_'+fragment_parent_name+r'_(\d+)-(\d+))_unrelaxed_rank_(\d{3})(.+).pdb'
+    filename = Path(path).name
+    match = re.search(pattern=regex_pat,string=filename)
     if match is None:
-        raise ValueError
-    else:
-        return int(match.group(2))
-
-def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
-    name = Path(path).stem.split('_unrelaxed')[0]
-    pred_rank = getRankFromPath(path)
-    
-    start,end = name.split('_')[-1].split('-')
-    start,end = int(start),int(end)
+        raise ValueError("Did not find PDB matching regex pattern: {regex_pat}")
+    name = match.group(1)
+    pred_rank = int(match.group(7))
+    start,end = int(match.group(5)),int(match.group(6))
     center = (start + end) / 2
 
     parser = PDBParser(QUIET=True)
@@ -129,7 +118,7 @@ def load_contact_data(path,protein_chains,fragment_chains,distance_cutoff):
     path = Path(path).resolve()
     return name,pred_rank,start,center,end,contacts,n_conts,path
 
-def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
+def get_contact_dataframe(all_paths,protein_name,fragment_parent_name,contact_distance_cutoff,n_workers=1):
 
     if len(all_paths)==0:
         raise ValueError("No pdb files were provided")
@@ -143,13 +132,23 @@ def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
     
     if n_workers > 1:
         # An alternative to starmap
-        load_contact_data_mapper = functools.partial(load_contact_data,protein_chains=protein_chains,fragment_chains=fragment_chain,distance_cutoff=contact_distance_cutoff)
+        load_contact_data_mapper = functools.partial(load_contact_data,
+                                                     protein_chains=protein_chains,
+                                                     fragment_chains=fragment_chain,
+                                                     protein_name=protein_name,
+                                                     fragment_parent_name=fragment_parent_name,
+                                                     distance_cutoff=contact_distance_cutoff)
         with mp.Pool(n_workers) as pool:
             data = pool.map(func=load_contact_data_mapper,iterable=all_paths,chunksize=1)
     else:
         data = list()
         for path in all_paths:
-            data.append(load_contact_data(path,protein_chains,fragment_chain,distance_cutoff=contact_distance_cutoff))
+            data.append(load_contact_data(path,
+                                          protein_chains,
+                                          fragment_chain,
+                                          protein_name=protein_name,
+                                          fragment_parent_name=fragment_parent_name,
+                                          distance_cutoff=contact_distance_cutoff))
 
     conts_df = pd.DataFrame(data,columns=['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa','contacts','n_contacts','path'])
     conts_df['protein_chains'] = ','.join(protein_chains)
@@ -162,7 +161,7 @@ def get_contact_dataframe(all_paths,contact_distance_cutoff,n_workers=1):
 def main(args):
 
     parse_v2_output = (args.predicted_pdbs is not None and args.confidence_logs is not None and 
-                       args.full_protein is not None and args.fragment_protein is not None)
+                       args.protein_name is not None and args.fragment_parent_name is not None)
     parse_v1_output = (args.import_json is not None)
     if not parse_v2_output and not parse_v1_output:
         raise ValueError("Must provide --predicted_pdbs and --confidence_logs OR --import_json")
@@ -170,6 +169,8 @@ def main(args):
     n_workers = len(os.sched_getaffinity(0))
     contact_distance_cutoff = args.contact_distance_cutoff
     experimental_data_path = args.experimental_data
+    protein_name = args.protein_name
+    fragment_parent_name = args.fragment_parent_name
 
     print(f"Loading data with {n_workers} workers")
 
@@ -184,15 +185,17 @@ def main(args):
         # Count contacts
         predicted_pdb_paths = args.predicted_pdbs
         # print(predicted_pdb_paths)
-        contacts_df = get_contact_dataframe(predicted_pdb_paths,contact_distance_cutoff,n_workers)
+        contacts_df = get_contact_dataframe(predicted_pdb_paths,protein_name,fragment_parent_name,contact_distance_cutoff,n_workers)
 
         # Merge dataframes into a single one containing all types of data
-        merge_on_list = ['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa']
+        merge_on_list = ['fragment_name','rank']
         comb_df = confidence_df.merge(contacts_df,on=merge_on_list,indicator=True,validate="one_to_one")
+        comb_df = comb_df.sort_values(by='fragment_start_aa')
+
         print(f"{len(comb_df)} lines after merging")
 
-        comb_df['fragment_parent_name'] =  args.fragment_protein
-        comb_df['protein_name'] = args.full_protein
+        comb_df['fragment_parent_name'] =  args.fragment_parent_name
+        comb_df['protein_name'] = args.protein_name
         comb_df['description'] = args.description
     else:
         json_path = Path(args.import_json)
@@ -220,6 +223,7 @@ def main(args):
             # Merge dataframes into a single one containing all types of data
             merge_on_list = ['fragment_name','rank','fragment_start_aa','fragment_center_aa','fragment_end_aa']
             comb_df = confidence_df.merge(contacts_df,on=merge_on_list,indicator=True,validate="one_to_one")
+            comb_df = comb_df.sort_values(by='fragment_start_aa')
             print(f"{len(comb_df)} lines after merging")
 
             comb_df['fragment_parent_name'] = fragfold_job_info[1]
@@ -268,8 +272,8 @@ if __name__ == "__main__":
                         help='The paths to the log.txt files from the ColabFold predictions')
     parser.add_argument('--import_json',required=False,
                         help='A JSON file specifying the location of output from v1 of FragFold. If given, will ignore --predicted_pdbs and --confidence_logs')
-    parser.add_argument('--full_protein',required=False)
-    parser.add_argument('--fragment_protein',required=False)
+    parser.add_argument('--protein_name',required=False)
+    parser.add_argument('--fragment_parent_name',required=False)
     parser.add_argument('--description',required=False,default="")
     parser.add_argument('--experimental_data',required=False,default="")
     parser.add_argument('--contact_distance_cutoff',required=False,default=3.5,type=float,
